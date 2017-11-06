@@ -1,0 +1,18 @@
+<div class="table">
+    <table class="table">
+            <caption>資産</caption>
+            <thead>
+                <tr>
+                    <th></th><th>cocincheck</th><th>zaif</th><th>合計</th>
+                </tr>
+            </thead>
+            <tbody>
+                    <tr>
+                        <th>JPY</th><td><%= @asset.coincheck_jpy %></td><td><%= @asset.zaif_jpy %></td><td><%= @asset.coincheck_jpy + @asset.zaif_jpy %></td>
+                    </tr>
+                    <tr>
+                        <th>BTC</th><td><%= @asset.coincheck_btc %></td><td><%= @asset.zaif_btc %></td><td><%= @asset.coincheck_btc + @asset.zaif_btc %></td>
+                    </tr>
+            </tbody>
+    </table>
+</div>

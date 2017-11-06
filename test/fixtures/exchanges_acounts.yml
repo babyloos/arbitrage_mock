@@ -1,0 +1,13 @@
+# Read about fixtures at http://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  coincheck_api_key: MyString
+  coincheck_secret_key: MyString
+  zaif_api_key: MyString
+  zaif_secret_key: MyString
+
+two:
+  coincheck_api_key: MyString
+  coincheck_secret_key: MyString
+  zaif_api_key: MyString
+  zaif_secret_key: MyString

@@ -1,0 +1,13 @@
+# Read about fixtures at http://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  coincheck_jpy: 1.5
+  coincheck_btc: 1.5
+  zaif_jpy: 1.5
+  zaif_btc: 1.5
+
+two:
+  coincheck_jpy: 1.5
+  coincheck_btc: 1.5
+  zaif_jpy: 1.5
+  zaif_btc: 1.5

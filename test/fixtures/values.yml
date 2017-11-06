@@ -1,0 +1,13 @@
+# Read about fixtures at http://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  coincheck_bid: 
+  coincheck_ask: 
+  zaif_bid: 
+  zaif_ask: 
+
+two:
+  coincheck_bid: 
+  coincheck_ask: 
+  zaif_bid: 
+  zaif_ask: 
