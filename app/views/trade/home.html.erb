@@ -1,18 +1,57 @@
-<div class="table">
-    <table class="table">
-            <caption>資産</caption>
-            <thead>
-                <tr>
-                    <th></th><th>cocincheck</th><th>zaif</th><th>合計</th>
-                </tr>
-            </thead>
-            <tbody>
-                    <tr>
-                        <th>JPY</th><td><%= @asset.coincheck_jpy %></td><td><%= @asset.zaif_jpy %></td><td><%= @asset.coincheck_jpy + @asset.zaif_jpy %></td>
-                    </tr>
-                    <tr>
-                        <th>BTC</th><td><%= @asset.coincheck_btc %></td><td><%= @asset.zaif_btc %></td><td><%= @asset.coincheck_btc + @asset.zaif_btc %></td>
-                    </tr>
-            </tbody>
-    </table>
+<div class="container">
+    <div class="row">
+        <div class="table">
+            <table class="table">
+                    <caption>資産</caption>
+                    <thead>
+                        <tr>
+                            <th></th><th>cocincheck</th><th>zaif</th><th>合計</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                            <tr>
+                                <th>JPY</th><td><%= @asset.coincheck_jpy %></td><td><%= @asset.zaif_jpy %></td><td><%= @asset.coincheck_jpy + @asset.zaif_jpy %></td>
+                            </tr>
+                            <tr>
+                                <th>BTC</th><td><%= @asset.coincheck_btc %></td><td><%= @asset.zaif_btc %></td><td><%= @asset.coincheck_btc + @asset.zaif_btc %></td>
+                            </tr>
+                    </tbody>
+            </table>
+        </div>
+        
+        <div class="table">
+            <table class="table">
+                    <caption>現在価格</caption>
+                    <thead>
+                        <tr>
+                            <th></th><th>cocincheck</th><th>zaif</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                            <tr>
+                                <th>BID</th><td><%= @value.coincheck_bid %></td><td><%= @value.zaif_ask %></td>
+                            </tr>
+                            <tr>
+                                <th>ASK</th><td><%= @value.coincheck_ask %></td><td><%= @value.zaif_ask %></td>
+                            </tr>
+                    </tbody>
+            </table>
+        </div>
+        
+          <div class="table">
+            <table class="table">
+                    <caption>取引利益</caption>
+                    <thead>
+                        <tr>
+                            <th></th><th>買:coincheck 売:zaif</th><th>買:zaif 売:coincheck</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                            <tr>
+                                <th>1ビットコインあたりの利益</th><td><%= @profit[:buy_coincheck] %></td><td><%= @profit[:buy_zaif] %></td>
+                            </tr>
+                    </tbody>
+            </table>
+        </div>
+    </div>
 </div>
