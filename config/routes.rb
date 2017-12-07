@@ -1,5 +1,6 @@
 Rails.application.routes.draw do
   root 'trade#home'
+  get '/ajax', to: 'trade#ajax'
   # The priority is based upon order of creation: first created -> highest priority.
   # See how all your routes lay out with "rake routes".
 

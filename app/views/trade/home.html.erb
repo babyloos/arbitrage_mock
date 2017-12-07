@@ -1,7 +1,7 @@
 <div class="container">
     <div class="row">
         <div class="table">
-            <table class="table">
+            <table class="table asset">
                     <caption>資産</caption>
                     <thead>
                         <tr>
@@ -10,17 +10,17 @@
                     </thead>
                     <tbody>
                             <tr>
-                                <th>JPY</th><td><%= @asset.coincheck_jpy %></td><td><%= @asset.zaif_jpy %></td><td><%= @asset.coincheck_jpy + @asset.zaif_jpy %></td>
+                                <th>JPY</th><td class="coincheck_jpy"></td><td class="zaif_jpy"></td><td class="sum_jpy"></td>
                             </tr>
                             <tr>
-                                <th>BTC</th><td><%= @asset.coincheck_btc %></td><td><%= @asset.zaif_btc %></td><td><%= @asset.coincheck_btc + @asset.zaif_btc %></td>
+                                <th>BTC</th><td class="coincheck_btc"></td><td class="zaif_btc"></td><td class="sum_btc"></td>
                             </tr>
                     </tbody>
             </table>
         </div>
         
         <div class="table">
-            <table class="table">
+            <table class="table value">
                     <caption>現在価格</caption>
                     <thead>
                         <tr>
@@ -29,17 +29,17 @@
                     </thead>
                     <tbody>
                             <tr>
-                                <th>BID</th><td><%= @value.coincheck_bid %></td><td><%= @value.zaif_ask %></td>
+                                <th>BID</th><td class="coincheck_bid"></td><td class="zaif_ask"></td>
                             </tr>
                             <tr>
-                                <th>ASK</th><td><%= @value.coincheck_ask %></td><td><%= @value.zaif_ask %></td>
+                                <th>ASK</th><td class="coincheck_ask"></td><td class="zaif_ask"></td>
                             </tr>
                     </tbody>
             </table>
         </div>
         
           <div class="table">
-            <table class="table">
+            <table class="table profit">
                     <caption>取引利益</caption>
                     <thead>
                         <tr>
@@ -48,10 +48,63 @@
                     </thead>
                     <tbody>
                             <tr>
-                                <th>1ビットコインあたりの利益</th><td><%= @profit[:buy_coincheck] %></td><td><%= @profit[:buy_zaif] %></td>
+                                <th>1ビットコインあたりの利益</th><td class="buy_coincheck"></td><td class="buy_zaif"></td>
                             </tr>
                     </tbody>
             </table>
         </div>
     </div>
 </div>
+
+<script>
+    // 価格情報、資産情報、利益情報計算結果を取得
+    
+    $(function() {
+       setInterval(dataGet, 1000);
+    });
+    
+    var dataGet = function(){
+         $.ajax('/ajax',
+          {
+            type: 'get',
+            data: { },
+            dataType: 'json'
+          }
+        )
+        // 検索成功時にはページに結果を反映
+        .done(function(data) {
+            // 取得したデータをセット
+            var data = data[0];
+            var asset = data.asset
+            var profit = data.profit
+            var value = data.value
+            
+            // console.log(asset);
+            // console.log(profit);
+            // console.log(value);
+            
+            // 資産
+            $(".asset .coincheck_jpy").text(asset.coincheck_jpy);
+            $(".asset .coincheck_btc").text(asset.coincheck_btc);
+            $(".asset .zaif_jpy").text(asset.zaif_jpy);
+            $(".asset .zaif_btc").text(asset.zaif_btc);
+            // 合計値
+            $(".asset .sum_jpy").text(parseFloat(asset.coincheck_jpy) + parseFloat(asset.zaif_jpy));
+            $(".asset .sum_btc").text(parseFloat(asset.coincheck_btc) + parseFloat(asset.zaif_btc));
+            
+            // 価格
+            $(".value .coincheck_bid").text(value.coincheck_bid);
+            $(".value .coincheck_ask").text(value.coincheck_ask);
+            $(".value .zaif_bid").text(value.zaif_bid);
+            $(".value .zaif_ask").text(value.zaif_ask);
+            
+            // 利益
+            $(".profit .buy_coincheck").text(profit.buy_coincheck);
+            $(".profit .buy_zaif").text(profit.buy_zaif);
+        })
+        // 検索失敗時には、その旨をダイアログ表示
+        .fail(function() {
+            console.log("データ取得に失敗");
+        });
+    };
+</script>

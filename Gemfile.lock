@@ -1,10 +1,3 @@
-GIT
-  remote: git://github.com/techbureau/zaif-ruby.git
-  revision: 57ce86dbf0de1feff5915008c5aee4af8d7e13fb
-  specs:
-    zaif4ruby (0.0.1)
-      websocket-client-simple (~> 0)
-
 GEM
   remote: https://rubygems.org/
   specs:
@@ -63,7 +56,6 @@ GEM
     crass (1.0.2)
     debug_inspector (0.0.3)
     erubis (2.7.0)
-    event_emitter (0.2.6)
     execjs (2.7.0)
     ffi (1.9.18)
     formatador (0.2.5)
@@ -204,10 +196,7 @@ GEM
       binding_of_caller (>= 0.7.2)
       railties (>= 4.0)
       sprockets-rails (>= 2.0, < 4.0)
-    websocket (1.2.4)
-    websocket-client-simple (0.3.0)
-      event_emitter
-      websocket
+    zaif (0.0.2)
 
 PLATFORMS
   ruby
@@ -232,7 +221,7 @@ DEPENDENCIES
   turbolinks
   uglifier (>= 1.3.0)
   web-console (~> 2.0)
-  zaif4ruby!
+  zaif (~> 0.0.2)
 
 BUNDLED WITH
    1.16.0
