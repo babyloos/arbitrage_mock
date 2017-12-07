@@ -45,13 +45,24 @@ module Arbitrage
         def trade
             # 取引量 0.01btc
             amount = 0.01
-            p @profit[:buy_coincheck]
             if(@profit[:buy_coincheck] > 0)
                 p "buy coincheck"
-                p buy_coincheck(amount) ? "売買成功" : "残高不足"
+                p @profit[:buy_coincheck]
+                if !buy_coincheck(amount)
+                    p "残高不足"
+                    adjustAssetJpy
+                    adjustAssetBtc
+                    buy_coincheck(amount)
+                end
             elsif(@profit[:buy_zaif] > 0)
                 p "buy zaif"
-                p buy_zaif(amount) ? "売買成功" : "残高不足"
+                p @profit[:buy_zaif]
+                if !buy_zaif(amount)
+                    p "残高不足"
+                    adjustAssetJpy
+                    adjustAssetBtc
+                    buy_zaif(amount)
+                end
             end
         end
         
@@ -65,6 +76,8 @@ module Arbitrage
             else
                 @asset[:coincheck_jpy] -= buyValue
                 @asset[:coincheck_btc] += amount
+                
+                @asset.save
             end
             
             # 残BTC確認
@@ -75,6 +88,8 @@ module Arbitrage
             else
                 @asset[:zaif_jpy] += sellValue
                 @asset[:zaif_btc] -= amount
+                
+                @asset.save
             end
         end
         
@@ -87,6 +102,8 @@ module Arbitrage
             else
                 @asset[:zaif_jpy] -= buyValue
                 @asset[:ziaf_btc] += amount
+                
+                @asset.save
             end
             
             # 残BTC確認
@@ -97,6 +114,8 @@ module Arbitrage
             else
                 @asset[:coincheck_jpy] += sellValue
                 @asset[:coincheck_btc] -= amount
+                
+                @asset.save
             end
         end
         
