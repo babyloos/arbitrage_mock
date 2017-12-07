@@ -101,7 +101,7 @@ module Arbitrage
                 return false
             else
                 @asset[:zaif_jpy] -= buyValue
-                @asset[:ziaf_btc] += amount
+                @asset[:zaif_btc] += amount
                 
                 @asset.save
             end
