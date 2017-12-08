@@ -77,7 +77,8 @@ module Arbitrage
                 @asset[:coincheck_jpy] -= buyValue
                 @asset[:coincheck_btc] += amount
                 
-                @asset.save
+                asset = Asset.new(coincheck_jpy: @asset.coincheck_jpy, coincheck_btc: @asset.coincheck_btc, zaif_jpy: @asset.zaif_jpy, zaif_btc: @asset.zaif_btc)
+                asset.save
             end
             
             # 残BTC確認
@@ -89,7 +90,8 @@ module Arbitrage
                 @asset[:zaif_jpy] += sellValue
                 @asset[:zaif_btc] -= amount
                 
-                @asset.save
+                asset = Asset.new(coincheck_jpy: @asset.coincheck_jpy, coincheck_btc: @asset.coincheck_btc, zaif_jpy: @asset.zaif_jpy, zaif_btc: @asset.zaif_btc)
+                asset.save
             end
         end
         

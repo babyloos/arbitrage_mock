@@ -6,13 +6,27 @@ class TradeController < ApplicationController
     def graph
         # 資産推移をグラフで表示
         
+        # 情報準備(直近１時間の情報を取得)
+        aHourAgo =  1.hour.ago.time.strftime("%Y-%m-%d %H:%M:%S")
+        
+        assetHistory = Asset.where("created_at > " + "\"" + aHourAgo + "\"").group("strftime('%Y-%m-%d %H:%M', created_at)").order("created_at asc")
+        
+        # 各データ準備
+        labelDatas = []
+        dataDatas = []
+        assetHistory.each do |asset|
+            labelDatas.push(asset.created_at)
+            dataDatas.push(asset.coincheck_jpy + asset.zaif_jpy)
+        end
+    
+        
         # グラフの種類
         type = "line"
         # グラフデータ
-        labels = ["Red", "Blue", "Yellow", "Green", "Purple", "Orange"]
+        labels = labelDatas
         label = "資産推移"
         # 資産情報
-        data = [12, 19, 3, 5, 2, 3]
+        data = dataDatas
         # 背景色
         backgroundColor = [
             'rgba(255, 99, 132, 0.2)',
@@ -33,6 +47,8 @@ class TradeController < ApplicationController
         ]
         # 線の幅
         borderWidth = 1
+        
+        # グラフデータ作成
         @data = JSON.generate(
             type: type,
             data: {
