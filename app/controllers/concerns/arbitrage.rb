@@ -8,6 +8,7 @@
     ZaifAPIのライブラリが使えないから生リクエストしたら使えたのでそれでいきます
         
 =end
+
 module Arbitrage
     extend ActiveSupport::Concern # インスタンスメソッドのみの利用時は記述の必要なし
     require 'net/http'

@@ -7,7 +7,7 @@ class TradeController < ApplicationController
         # 資産推移をグラフで表示
         
         # 情報準備(直近１時間の情報を取得)
-        aHourAgo =  1.hour.ago.time.strftime("%Y-%m-%d %H:%M:%S")
+        aHourAgo =  10.hour.ago.time.strftime("%Y-%m-%d %H:%M:%S")
         
         assetHistory = Asset.where("created_at > " + "\"" + aHourAgo + "\"").group("strftime('%Y-%m-%d %H:%M', created_at)").order("created_at asc")
         

@@ -79,14 +79,10 @@
             var profit = data.profit
             var value = data.value
             
-            // console.log(asset);
-            // console.log(profit);
-            // console.log(value);
-            
             // 資産
-            $(".asset .coincheck_jpy").text(asset.coincheck_jpy);
+            $(".asset .coincheck_jpy").text(Math.round(asset.coincheck_jpy));
             $(".asset .coincheck_btc").text(asset.coincheck_btc);
-            $(".asset .zaif_jpy").text(asset.zaif_jpy);
+            $(".asset .zaif_jpy").text(Math.round(asset.zaif_jpy));
             $(".asset .zaif_btc").text(asset.zaif_btc);
             // 合計値
             $(".asset .sum_jpy").text(parseFloat(asset.coincheck_jpy) + parseFloat(asset.zaif_jpy));
