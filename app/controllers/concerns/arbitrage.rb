@@ -8,7 +8,6 @@
     ZaifAPIのライブラリが使えないから生リクエストしたら使えたのでそれでいきます
         
 =end
-
 module Arbitrage
     extend ActiveSupport::Concern # インスタンスメソッドのみの利用時は記述の必要なし
     require 'net/http'
@@ -46,24 +45,13 @@ module Arbitrage
         def trade
             # 取引量 0.01btc
             amount = 0.01
+            p @profit[:buy_coincheck];
             if(@profit[:buy_coincheck] > 0)
                 p "buy coincheck"
-                p @profit[:buy_coincheck]
-                if !buy_coincheck(amount)
-                    p "残高不足"
-                    adjustAssetJpy
-                    adjustAssetBtc
-                    buy_coincheck(amount)
-                end
+                p buy_coincheck(amount) ? "売買成功" : "残高不足"
             elsif(@profit[:buy_zaif] > 0)
                 p "buy zaif"
-                p @profit[:buy_zaif]
-                if !buy_zaif(amount)
-                    p "残高不足"
-                    adjustAssetJpy
-                    adjustAssetBtc
-                    buy_zaif(amount)
-                end
+                p buy_zaif(amount) ? "売買成功" : "残高不足"
             end
         end
         
@@ -77,9 +65,6 @@ module Arbitrage
             else
                 @asset[:coincheck_jpy] -= buyValue
                 @asset[:coincheck_btc] += amount
-                
-                asset = Asset.new(coincheck_jpy: @asset.coincheck_jpy, coincheck_btc: @asset.coincheck_btc, zaif_jpy: @asset.zaif_jpy, zaif_btc: @asset.zaif_btc)
-                asset.save
             end
             
             # 残BTC確認
@@ -90,9 +75,6 @@ module Arbitrage
             else
                 @asset[:zaif_jpy] += sellValue
                 @asset[:zaif_btc] -= amount
-                
-                asset = Asset.new(coincheck_jpy: @asset.coincheck_jpy, coincheck_btc: @asset.coincheck_btc, zaif_jpy: @asset.zaif_jpy, zaif_btc: @asset.zaif_btc)
-                asset.save
             end
         end
         
@@ -105,8 +87,6 @@ module Arbitrage
             else
                 @asset[:zaif_jpy] -= buyValue
                 @asset[:zaif_btc] += amount
-                
-                @asset.save
             end
             
             # 残BTC確認
@@ -117,8 +97,6 @@ module Arbitrage
             else
                 @asset[:coincheck_jpy] += sellValue
                 @asset[:coincheck_btc] -= amount
-                
-                @asset.save
             end
         end
         
