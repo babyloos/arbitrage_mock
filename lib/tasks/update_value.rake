@@ -13,9 +13,9 @@ namespace :update_value do
             d.updateValue
             p "updateAsset"
             d.updateAsset
-            p "updateProfit"
-            d.profit
-            # d.trade
+            # p "updateProfit"
+            # d.profit
+            d.trade
             sleep(1)
             p "-------------------"
         end

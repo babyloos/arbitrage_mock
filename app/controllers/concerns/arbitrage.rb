@@ -23,6 +23,7 @@ module Arbitrage
             @coincheckApi = CoincheckClient.new(ENV["COINCHECK_API_KEY"], ENV["COINCHECK_SECRET_KEY"])
             @zaifApi = API.new(api_key: ENV["ZAIF_API_KEY"], api_secret: ENV["ZAIF_API_SECRET"])
             @value = Value.last
+            @tradeAmount = 0.001 # １度に取引する数量
             if @production
                 @asset = updateAsset
             else
@@ -35,7 +36,21 @@ module Arbitrage
         def updateValue
             response = @coincheckApi.read_ticker
             coincheckData = JSON.parse(response.body)
-            zaifData = @zaifApi.get_ticker("btc")
+            begin
+                zaifData = @zaifApi.get_ticker("btc")
+            rescue ConnectionFailedException => e
+                puts "zaifへのアクセスに失敗したっぽいっす"
+                puts "message : " + e.message
+                puts "もういっかいだけ試してみるっす"
+                sleep(1)
+                begin
+                    zaifData = @zaifApi.get_ticker("btc")
+                rescue ConnectionFailedException => e
+                    puts "やっぱだめだったっす、あきらめます"
+                    exit
+                end
+                puts "いけたっす"
+            end
             value = Value.new(coincheck_bid: coincheckData["bid"], coincheck_ask: coincheckData["ask"], zaif_bid: zaifData["bid"], zaif_ask: zaifData["ask"])
             value.save
             @value = Value.last
@@ -53,12 +68,17 @@ module Arbitrage
                 asset.save
                 asset
             else
-                Asset.last
+                asset = Asset.new(coincheck_jpy: @asset[:coincheck_jpy], coincheck_btc: @asset[:coincheck_btc],
+                                    zaif_jpy: @asset[:zaif_jpy], zaif_btc: @asset[:zaif_btc])
+                asset.save
+                asset
             end
         end
         
         # 本番取引
         def trade
+            # 利益計算
+            profit
             if @production
                 production_trade
             else
@@ -71,15 +91,13 @@ module Arbitrage
         
          # デモ取引
         def demoTrade
-            # 取引量 0.01btc
-            amount = 0.01
             p @profit[:buy_coincheck];
             if(@profit[:buy_coincheck] > 0)
                 p "buy coincheck"
-                p buy_coincheck(amount) ? "売買成功" : "残高不足"
+                p buy_coincheck_demo(@tradeAmount) ? "売買成功" : "残高不足"
             elsif(@profit[:buy_zaif] > 0)
                 p "buy zaif"
-                p buy_zaif(amount) ? "売買成功" : "残高不足"
+                p buy_zaif_demo(@tradeAmount) ? "売買成功" : "残高不足"
             end
         end
         
