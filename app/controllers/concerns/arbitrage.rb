@@ -19,7 +19,7 @@ module Arbitrage
     class DataUpdate
         include Zaif
         def initialize
-            @coincheckApi = CoincheckClient.new("YOUR API KEY", "YOUR SECRET KEY")
+            @coincheckApi = CoincheckClient.new(ENV["COINCHECK_API_KEY"], ENV["COINCHECK_SECRET_KEY"])
             @zaifApi = API.new(api_key: ENV["ZAIF_API_KEY"], api_secret: ENV["ZAIF_API_SECRET"])
             @value = Value.last
             @asset = updateAsset
@@ -38,13 +38,14 @@ module Arbitrage
         
         # 資産情報の更新
         def updateAsset
+            
             # coincheck
+            coincheckAsset = JSON.parse(@coincheckApi.read_balance.body)
             
             # zaif
             zaifAsset = @zaifApi.get_info
-            # debug
-            nowAsset = Asset.last
-            asset = Asset.new(coincheck_jpy: nowAsset.coincheck_jpy, coincheck_btc: nowAsset.coincheck_btc,
+            
+            asset = Asset.new(coincheck_jpy: coincheckAsset["jpy"], coincheck_btc: coincheckAsset["btc"],
                                 zaif_jpy: zaifAsset["deposit"]["jpy"], zaif_btc: zaifAsset["deposit"]["btc"])
             asset.save
             asset
@@ -162,6 +163,8 @@ module Arbitrage
                 exit
             end
         end
+        
+        # coincheck注文発行
         
         private
         
