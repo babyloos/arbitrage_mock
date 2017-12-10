@@ -14,10 +14,11 @@ module Arbitrage
     # require 'uri'
     
     class DataUpdate
-        # include Zaif
+        include Zaif
         def initialize
             @coincheckApi = CoincheckClient.new("YOUR API KEY", "YOUR SECRET KEY")
-            @zaifApi = Zaif.new
+            @zaifApi = API.new(api_key: "api_key", api_secret: "api_secret")
+            # @zaifApi = Zaif.new
             @value = Value.last
             @asset = Asset.last
             @profit;
@@ -164,13 +165,18 @@ module Arbitrage
     
     # private
     
-    class Zaif
-        def getValue
-            url = "https://api.zaif.jp/api/1/ticker/btc_jpy"
-            ret = Net::HTTP.get(URI.parse(url))
-            JSON.parse(ret)
-        end
-    end
+    # class Zaif
+        
+    #     def getValue
+    #         url = "https://api.zaif.jp/api/1/ticker/btc_jpy"
+    #         ret = Net::HTTP.get(URI.parse(url))
+    #         JSON.parse(ret)
+    #     end
+        
+    #     def getAsset
+            
+    #     end
+    # end
     
     # 各種価格の取得
     
