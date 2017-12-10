@@ -152,19 +152,34 @@ module Arbitrage
         # amount: 注文数量(最低0.0001)
         def zaifOrder(type, value, amount)
             begin
-                if type == "bid"
+                if type == "buy"
                     ret = zaifApi.bid("btc", value, amount)
-                elsif type == "ask"
+                elsif type == "sell"
                     ret = zaifApi.ask("btc", value, amount)
                 end
             rescue APIErrorException => e
                 # 資産移動の必要性が出たらここで行う
+                p "zaifでの売買で問題が発生しました。"
                 p e.message
-                exit
             end
         end
         
         # coincheck注文発行
+        # type: "bid" or "ask" bidで買い askで売り
+        # value: 注文価格
+        # amount: 注文数量(最低0.005)
+        def coincheckOrder(type, value, amount)
+            if type == "buy"
+                ret = JSON.parse(@coincheckApi.create_orders(order_type: "buy", rate: value, amount: amount).body)
+            elsif type == "sell"
+                ret = JSON.parse(@coincheckApi.create_orders(order_type: "sell", rate: value, amount: amount).body)
+            end
+            
+            if !ret["success"]
+                p "coincheckでの売買で問題が発生しました。"
+                p ret["error"]
+            end
+        end
         
         private
         

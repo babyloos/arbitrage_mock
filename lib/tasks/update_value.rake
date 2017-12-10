@@ -6,9 +6,9 @@ namespace :update_value do
         include Arbitrage
         d = DataUpdate.new
         p "initialize"
+        p "------------------"
         sleep(1)
         while true do
-            p "-------------------"
             p "updateValue"
             d.updateValue
             p "updateAsset"
