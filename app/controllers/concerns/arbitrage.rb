@@ -145,6 +145,24 @@ module Arbitrage
             # end
         end
         
+        # zaif注文発行
+        # type: "bid" or "ask" bidで買い askで売り
+        # value: 注文価格
+        # amount: 注文数量(最低0.0001)
+        def zaifOrder(type, value, amount)
+            begin
+                if type == "bid"
+                    ret = zaifApi.bid("btc", value, amount)
+                elsif type == "ask"
+                    ret = zaifApi.ask("btc", value, amount)
+                end
+            rescue APIErrorException => e
+                # 資産移動の必要性が出たらここで行う
+                p e.message
+                exit
+            end
+        end
+        
         private
         
     end
