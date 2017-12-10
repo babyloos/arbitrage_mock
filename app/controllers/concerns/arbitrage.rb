@@ -19,10 +19,15 @@ module Arbitrage
     class DataUpdate
         include Zaif
         def initialize
+            @production = false
             @coincheckApi = CoincheckClient.new(ENV["COINCHECK_API_KEY"], ENV["COINCHECK_SECRET_KEY"])
             @zaifApi = API.new(api_key: ENV["ZAIF_API_KEY"], api_secret: ENV["ZAIF_API_SECRET"])
             @value = Value.last
-            @asset = updateAsset
+            if @production
+                @asset = updateAsset
+            else
+                @asset = Asset.last
+            end
             @profit;
         end
         
@@ -38,21 +43,34 @@ module Arbitrage
         
         # 資産情報の更新
         def updateAsset
-            
-            # coincheck
-            coincheckAsset = JSON.parse(@coincheckApi.read_balance.body)
-            
-            # zaif
-            zaifAsset = @zaifApi.get_info
-            
-            asset = Asset.new(coincheck_jpy: coincheckAsset["jpy"], coincheck_btc: coincheckAsset["btc"],
-                                zaif_jpy: zaifAsset["deposit"]["jpy"], zaif_btc: zaifAsset["deposit"]["btc"])
-            asset.save
-            asset
+            if @productino
+                # coincheck
+                coincheckAsset = JSON.parse(@coincheckApi.read_balance.body)
+                # zaif
+                zaifAsset = @zaifApi.get_info
+                asset = Asset.new(coincheck_jpy: coincheckAsset["jpy"], coincheck_btc: coincheckAsset["btc"],
+                                    zaif_jpy: zaifAsset["deposit"]["jpy"], zaif_btc: zaifAsset["deposit"]["btc"])
+                asset.save
+                asset
+            else
+                Asset.last
+            end
         end
         
-         # 価格情報を参考に裁定取引を行う
+        # 本番取引
         def trade
+            if @production
+                production_trade
+            else
+                demoTrade
+            end
+        end
+        
+        def production_trade
+        end
+        
+         # デモ取引
+        def demoTrade
             # 取引量 0.01btc
             amount = 0.01
             p @profit[:buy_coincheck];
@@ -66,7 +84,7 @@ module Arbitrage
         end
         
         # coincheckで買ってzaifで売る
-        def buy_coincheck(amount)
+        def buy_coincheck_demo(amount)
             # 残JPY確認
             # 買い
             buyValue = amount * @value[:coincheck_ask]
@@ -88,7 +106,7 @@ module Arbitrage
             end
         end
         
-        def buy_zaif(amount)
+        def buy_zaif_demo(amount)
              # 残JPY確認
             # 買い
             buyValue = amount * @value[:zaif_ask]
