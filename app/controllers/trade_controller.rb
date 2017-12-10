@@ -68,9 +68,10 @@ class TradeController < ApplicationController
         # 価格情報をjsonで出力
         asset = Asset.last
         value = Value.last
+        profit = Profit.last
         
-        p = DataUpdate.new
-        profit = p.profit
+        # p = DataUpdate.new
+        # profit = p.profit
         @data = [
             "asset": asset,
             "value": value,

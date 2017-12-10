@@ -5,14 +5,19 @@ namespace :update_value do
     task :update => :environment do 
         include Arbitrage
         d = DataUpdate.new
+        p "initialize"
+        sleep(1)
         while true do
+            p "-------------------"
+            p "updateValue"
             d.updateValue
-            p "update value"
+            p "updateAsset"
+            d.updateAsset
+            p "updateProfit"
             d.profit
-            p "profit"
-            d.trade
-            p "trade"
+            # d.trade
             sleep(1)
+            p "-------------------"
         end
     end
 end

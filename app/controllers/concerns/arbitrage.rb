@@ -6,6 +6,9 @@
     -- 売買判断 --
     
     ZaifAPIのライブラリが使えないから生リクエストしたら使えたのでそれでいきます
+    
+    
+    １度にapiごとのリクエストを一度に行わなければいけない（APIリクエスト数の節約）
         
 =end
 module Arbitrage
@@ -17,21 +20,17 @@ module Arbitrage
         include Zaif
         def initialize
             @coincheckApi = CoincheckClient.new("YOUR API KEY", "YOUR SECRET KEY")
-            @zaifApi = API.new(api_key: "api_key", api_secret: "api_secret")
-            # @zaifApi = Zaif.new
+            @zaifApi = API.new(api_key: ENV["ZAIF_API_KEY"], api_secret: ENV["ZAIF_API_SECRET"])
             @value = Value.last
-            @asset = Asset.last
+            @asset = updateAsset
             @profit;
-            # @zaifApi = self::Zaif.new("")
-            # @zaifApi = self::Zaif::API.new
         end
         
         # 価格情報の更新
         def updateValue
             response = @coincheckApi.read_ticker
             coincheckData = JSON.parse(response.body)
-            zaifData = @zaifApi.getValue
-            # zaifData = @zaifApi.get_ticker("btc")
+            zaifData = @zaifApi.get_ticker("btc")
             value = Value.new(coincheck_bid: coincheckData["bid"], coincheck_ask: coincheckData["ask"], zaif_bid: zaifData["bid"], zaif_ask: zaifData["ask"])
             value.save
             @value = Value.last
@@ -39,7 +38,16 @@ module Arbitrage
         
         # 資産情報の更新
         def updateAsset
+            # coincheck
             
+            # zaif
+            zaifAsset = @zaifApi.get_info
+            # debug
+            nowAsset = Asset.last
+            asset = Asset.new(coincheck_jpy: nowAsset.coincheck_jpy, coincheck_btc: nowAsset.coincheck_btc,
+                                zaif_jpy: zaifAsset["deposit"]["jpy"], zaif_btc: zaifAsset["deposit"]["btc"])
+            asset.save
+            asset
         end
         
          # 価格情報を参考に裁定取引を行う
@@ -103,87 +111,41 @@ module Arbitrage
         
         # 利益計算
         def profit
-            @profit = {buy_coincheck: @value.zaif_bid - @value.coincheck_ask, buy_zaif: @value.coincheck_bid - @value.zaif_ask}
+            profit = Profit.new(buy_coincheck: @value.zaif_bid - @value.coincheck_ask, buy_zaif: @value.coincheck_bid - @value.zaif_ask)
+            profit.save
+            @profit = profit
         end
-        
         # 資金調整(JPY)
         def adjustAssetJpy
-            if(@asset[:coincheck_jpy] < @asset[:zaif_jpy])
-                amount = ((@asset[:zaif_jpy] - @asset[:coincheck_jpy]) / 2).round
-                @asset[:coincheck_jpy] += amount;
-                @asset[:zaif_jpy] -= amount;
-            elsif(@asset[:zaif_jpy] < @asset[:coincheck_jpy])
-                amount = ((@asset[:coincheck_jpy] - @asset[:zaif_jpy]) / 2).round
-                @asset[:zaif_jpy] += amount;
-                @asset[:coincheck_jpy] -= amount;
-            else
-                false
-            end
+            # if(@asset[:coincheck_jpy] < @asset[:zaif_jpy])
+            #     amount = ((@asset[:zaif_jpy] - @asset[:coincheck_jpy]) / 2).round
+            #     @asset[:coincheck_jpy] += amount;
+            #     @asset[:zaif_jpy] -= amount;
+            # elsif(@asset[:zaif_jpy] < @asset[:coincheck_jpy])
+            #     amount = ((@asset[:coincheck_jpy] - @asset[:zaif_jpy]) / 2).round
+            #     @asset[:zaif_jpy] += amount;
+            #     @asset[:coincheck_jpy] -= amount;
+            # else
+            #     false
+            # end
         end
         
         # 資金調整(BTC)
         def adjustAssetBtc
-            if(@asset[:coincheck_btc] < @asset[:zaif_btc])
-                amount = (@asset[:zaif_btc] - @asset[:coincheck_btc]) / 2
-                @asset[:coincheck_btc] += amount;
-                @asset[:zaif_btc] -= amount;
-            elsif(@asset[:zaif_btc] < @asset[:coincheck_btc])
-                amount = (@asset[:coincheck_btc] - @asset[:zaif_btc]) / 2
-                @asset[:zaif_btc] += amount;
-                @asset[:coincheck_btc] -= amount;
-            else
-                false
-            end
+            # if(@asset[:coincheck_btc] < @asset[:zaif_btc])
+            #     amount = (@asset[:zaif_btc] - @asset[:coincheck_btc]) / 2
+            #     @asset[:coincheck_btc] += amount;
+            #     @asset[:zaif_btc] -= amount;
+            # elsif(@asset[:zaif_btc] < @asset[:coincheck_btc])
+            #     amount = (@asset[:coincheck_btc] - @asset[:zaif_btc]) / 2
+            #     @asset[:zaif_btc] += amount;
+            #     @asset[:coincheck_btc] -= amount;
+            # else
+            #     false
+            # end
         end
+        
         private
         
     end
-
-    # class ProfitCalc
-    #     def initialize
-    #         @value = Value.last
-    #         @profit;
-    #     end
-        
-    #     def profit
-    #         @profit = {buy_coincheck: @value.zaif_bid - @value.coincheck_ask, buy_zaif: @value.coincheck_bid - @value.zaif_ask}
-    #     end
-        
-    #     # 価格情報を参考に裁定取引を行う
-    #     def trade
-    #         # 取引量 0.01btc
-    #         if(@profit[:buy_coincheck] > 0) {
-                
-    #         } else if(@profit[:buy_zaif] > 0) {
-                
-    #         }
-    #     end
-        
-    #     def updateAsset
-    #     end
-    # end
-    
-    # private
-    
-    # class Zaif
-        
-    #     def getValue
-    #         url = "https://api.zaif.jp/api/1/ticker/btc_jpy"
-    #         ret = Net::HTTP.get(URI.parse(url))
-    #         JSON.parse(ret)
-    #     end
-        
-    #     def getAsset
-            
-    #     end
-    # end
-    
-    # 各種価格の取得
-    
-    # def getCoincheckValue
-    #     cc = CoincheckClient.new("YOUR API KEY", "YOUR SECRET KEY")
-    #     response = cc.read_ticker
-    #     JSON.parse(response.body)
-    # end
-    
 end
