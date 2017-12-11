@@ -213,6 +213,41 @@ module Arbitrage
                 false
             end
         end 
+        
+        # 資金調整(JPY)デモ
+        # 実際には手動で行うのでこれはデバッグ用
+        # 外から使われるのでスタティックメソッドとする
+        # 常に少ない方から多い方に移動する
+        # amount: 移動するJPYの量 :autoなら両取引所で同じ金額になるようにする
+        def self.adjustAssetJpy_demo(move_amount = :auto)
+            
+            # 資金移動手数料
+            coincheckToZaifFee = 886
+            zaifToCoincheckFee = 1106
+            
+            lastAsset = Asset.last
+            asset = Asset.new(coincheck_jpy: lastAsset.coincheck_jpy, coincheck_btc: lastAsset.coincheck_btc, zaif_jpy: lastAsset.zaif_jpy, zaif_btc: lastAsset.zaif_btc)
+            
+            if asset.coincheck_jpy < asset.zaif_jpy
+                # 移動量が自動の場合
+                if move_amount == :auto
+                    amount = (asset.zaif_jpy - asset.coincheck_jpy) / 2
+                    asset.zaif_jpy -= amount
+                    asset.zaif_jpy -= zaifToCoincheckFee # 手数料を引く
+                    asset.coincheck_jpy += amount
+                end
+            elsif asset.coincheck_jpy > asset.zaif_jpy
+                # 移動量が自動の場合
+                if move_amount == :auto
+                    amount = (asset.coincheck_jpy - asset.zaif_jpy) / 2
+                    asset.coincheck_jpy -= amount
+                    asset.coincheck_jpy -= coincheckToZaifFee # 手数料を引く
+                    asset.zaif_jpy += amount 
+                end
+            end
+            
+            asset.save
+        end
  
         # 資金調整 (JPY)
         # def ajustAssetJpy
