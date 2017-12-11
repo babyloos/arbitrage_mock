@@ -24,6 +24,8 @@ module Arbitrage
             @zaifApi = API.new(api_key: ENV["ZAIF_API_KEY"], api_secret: ENV["ZAIF_API_SECRET"])
             @value = Value.last
             @tradeAmount = 0.001 # １度に取引する数量
+            @needProfit = 10 # １度の取引で必要な利益
+            @btcSendCost = 0.0005 # BTC送金手数料
             if @production
                 @asset = updateAsset
             else
@@ -58,7 +60,7 @@ module Arbitrage
         
         # 資産情報の更新
         def updateAsset
-            if @productino
+            if @production
                 # coincheck
                 coincheckAsset = JSON.parse(@coincheckApi.read_balance.body)
                 # zaif
@@ -91,13 +93,38 @@ module Arbitrage
         
          # デモ取引
         def demoTrade
-            p @profit[:buy_coincheck];
-            if(@profit[:buy_coincheck] > 0)
+            if(@profit[:buy_coincheck] > @needProfit)
                 p "buy coincheck"
-                p buy_coincheck_demo(@tradeAmount) ? "売買成功" : "残高不足"
-            elsif(@profit[:buy_zaif] > 0)
+                if buy_coincheck_demo(@tradeAmount)
+                    puts "売買成功"
+                else
+                    puts "売買失敗"
+                    puts "資金調整"
+                    adjustAsset_demo
+                    if buy_coincheck_demo(@tradeAmount)
+                        puts "再売買成功"
+                    else
+                        puts "異常が発生しました。"
+                        exit
+                    end
+                end
+            elsif(@profit[:buy_zaif] > @needProfit)
                 p "buy zaif"
-                p buy_zaif_demo(@tradeAmount) ? "売買成功" : "残高不足"
+                if buy_zaif_demo(@tradeAmount)
+                    puts "売買成功"
+                else
+                    puts "売買失敗"
+                    puts "資金調整"
+                    adjustAsset_demo
+                    if buy_coincheck_demo(@tradeAmount)
+                        puts "再売買成功"
+                    else
+                        puts "異常が発生しました。"
+                        exit
+                    end
+                end
+            else
+                p "取引は行われませんでした。"
             end
         end
         
@@ -152,8 +179,28 @@ module Arbitrage
             profit.save
             @profit = profit
         end
-        # 資金調整(JPY)
-        def adjustAssetJpy
+        
+        # 資金調整デモ
+        # 仮想的な資金移動
+        # BTCのみ自動調整する
+        # BTC送金手数料を加味する
+        # 送金手数料0.0005BTC
+        def adjustAsset_demo
+            if(@asset[:coincheck_btc] < @asset[:zaif_btc])
+                amount = (@asset[:zaif_btc] - @asset[:coincheck_btc]) / 2
+                @asset[:coincheck_btc] += amount;
+                @asset[:zaif_btc] -= amount - @btcSendCost; # BTC送金コストを引く
+            elsif(@asset[:zaif_btc] < @asset[:coincheck_btc])
+                amount = (@asset[:coincheck_btc] - @asset[:zaif_btc]) / 2
+                @asset[:zaif_btc] += amount;
+                @asset[:coincheck_btc] -= amount - @btcSendCost; # BTC送金コストを引く
+            else
+                false
+            end
+        end 
+ 
+        # 資金調整 (JPY)
+        # def ajustAssetJpy
             # if(@asset[:coincheck_jpy] < @asset[:zaif_jpy])
             #     amount = ((@asset[:zaif_jpy] - @asset[:coincheck_jpy]) / 2).round
             #     @asset[:coincheck_jpy] += amount;
@@ -165,7 +212,7 @@ module Arbitrage
             # else
             #     false
             # end
-        end
+        # end
         
         # 資金調整(BTC)
         def adjustAssetBtc
