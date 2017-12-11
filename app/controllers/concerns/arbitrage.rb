@@ -98,6 +98,15 @@ module Arbitrage
                 if buy_coincheck_demo(@tradeAmount) == :need_jpy
                     puts "売買失敗"
                     puts "資金調整(JPY)が必要です"
+                    DataUpdate::adjustAssetJpy_demo
+                    @asset = Asset.last
+                    puts "資金調整(JPY)しました"
+                    if buy_coincheck_demo(@tradeAmount)
+                        puts "再売買成功"
+                    else
+                        puts "----------------異常が発生しました-------------"
+                        exit
+                    end
                 elsif buy_coincheck_demo(@tradeAmount) == :need_btc
                     puts "資金調整(BTC)"
                     adjustAsset_demo(:btc)
@@ -105,8 +114,6 @@ module Arbitrage
                         puts "再売買成功"
                     else
                         puts "----------------異常が発生しました-------------"
-                        puts ""
-                        puts "-----------------------------------------------"
                         exit
                     end
                 else
@@ -117,6 +124,15 @@ module Arbitrage
                 if buy_zaif_demo(@tradeAmount) == :need_jpy
                     puts "売買失敗"
                     puts "資金調整(JPY)が必要です"
+                    DataUpdate::adjustAssetJpy_demo
+                    @asset = Asset.last
+                    puts "資金調整(JPY)しました"
+                    if buy_zaif_demo(@tradeAmount)
+                        puts "再売買成功"
+                    else
+                        puts "----------------異常が発生しました-------------"
+                        exit
+                    end
                 elsif buy_zaif_demo(@tradeAmount) == :need_btc
                     puts "資金調整(BTC)"
                     adjustAsset_demo(:btc)
@@ -124,8 +140,6 @@ module Arbitrage
                         puts "再売買成功"
                     else
                         puts "----------------異常が発生しました-------------"
-                        puts ""
-                        puts "-----------------------------------------------"
                         exit
                     end
                 else
