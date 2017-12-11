@@ -23,9 +23,21 @@ module Arbitrage
             @coincheckApi = CoincheckClient.new(ENV["COINCHECK_API_KEY"], ENV["COINCHECK_SECRET_KEY"])
             @zaifApi = API.new(api_key: ENV["ZAIF_API_KEY"], api_secret: ENV["ZAIF_API_SECRET"])
             @value = Value.last
-            @tradeAmount = 0.001 # １度に取引する数量
-            @needProfit = 10 # １度の取引で必要な利益
-            @btcSendCost = 0.0005 # BTC送金手数料
+            @btcSendCost = 0.0005 # BTC送金手数料(BTC)
+            @tradeAmount = 0.001 # １度に取引する数量(BTC)
+            # 資産調整ごとに目標とする利益
+            # 資産調整ごとに必要な利益(%)を手数料を加味して算出
+            # 最高販売価格を元にBTC送金手数料の割合を算出
+            # 最高販売価格を元にJPY送金手数料の割合を算出
+            # 上記２つのうち高いほうを手数料とする
+            bestBid = @value.coincheck_bid >= @value.zaif_bid ? @value.coincheck_bid : @value.zaif_bid
+            adjustBtcFee = bestBid * @btcSendCost
+            feePer = adjustBtcFee / bestBid * 100 # 割合(%)
+            @profitRequiredForOneAdjustAsset = 1 + feePer # 資産調整ごとに必要な利益(%)
+            # puts "bestBid : " + bestBid.to_s
+            # puts "adjustBtcFee : " + adjustBtcFee.to_s
+            # puts "資産調整ごとに必要な利益 : " + @profitRequiredForOneAdjustAsset.to_s + "%"
+            @profitRequiredForOneTransaction # １度の取引ごとに必要な利益
             if @production
                 @asset = updateAsset
             else
@@ -93,7 +105,7 @@ module Arbitrage
         
          # デモ取引
         def demoTrade
-            if @profit[:buy_coincheck] > @needProfit
+            if @profit[:buy_coincheck] > @profitRequiredForOneTransaction
                 p "buy coincheck"
                 if buy_coincheck_demo(@tradeAmount) == :need_jpy
                     puts "売買失敗"
@@ -119,7 +131,7 @@ module Arbitrage
                 else
                     puts "売買成功"
                 end
-            elsif @profit[:buy_zaif] > @needProfit
+            elsif @profit[:buy_zaif] > @profitRequiredForOneTransaction
                 p "buy zaif"
                 if buy_zaif_demo(@tradeAmount) == :need_jpy
                     puts "売買失敗"
@@ -224,7 +236,7 @@ module Arbitrage
             puts "現在の最少取引回数は " + available_trade_count.to_s + " です"
             
             # １回の取引ごとの最低必要利益を計算する
-            
+            @profitRequiredForOneTransaction = @profitRequiredForOneAdjustAsset / available_trade_count # １回の資産調整ごとに必要な利益(%)
         end
         
         # 資金調整デモ
