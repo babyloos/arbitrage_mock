@@ -204,6 +204,27 @@ module Arbitrage
             profit = Profit.new(buy_coincheck: @value.zaif_bid - @value.coincheck_ask, buy_zaif: @value.coincheck_bid - @value.zaif_ask)
             profit.save
             @profit = profit
+            
+            available_trade_counts = []
+            # 現在の資産を元に１回の取引で必要な利益を計算する
+            # 現在の資産であと何回取引できるか（最少回数）
+            # coincheck
+            # 連続購入した場合
+            available_trade_counts.push(@asset.coincheck_btc / @tradeAmount)
+            # 連続販売した場合
+            available_trade_counts.push(@asset.coincheck_jpy / (@value.coincheck_bid * @tradeAmount))
+            # zaif
+            # 連続購入した場合
+            available_trade_counts.push(@asset.zaif_btc / @tradeAmount)
+            # 連続販売した場合
+            available_trade_counts.push(@asset.zaif_jpy / (@value.zaif_bid * @tradeAmount))
+            
+            # 最終的に一番少ない取引可能回数
+            available_trade_count = available_trade_counts.sort[0]
+            puts "現在の最少取引回数は " + available_trade_count.to_s + " です"
+            
+            # １回の取引ごとの最低必要利益を計算する
+            
         end
         
         # 資金調整デモ
