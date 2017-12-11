@@ -104,7 +104,9 @@ module Arbitrage
                     if buy_coincheck_demo(@tradeAmount)
                         puts "再売買成功"
                     else
-                        puts "異常が発生しました。"
+                        puts "----------------異常が発生しました-------------"
+                        puts "たぶん資金不足"
+                        puts "-----------------------------------------------"
                         exit
                     end
                 end
@@ -119,7 +121,9 @@ module Arbitrage
                     if buy_coincheck_demo(@tradeAmount)
                         puts "再売買成功"
                     else
-                        puts "異常が発生しました。"
+                        puts "----------------異常が発生しました-------------"
+                        puts "たぶん資金不足"
+                        puts "-----------------------------------------------"
                         exit
                     end
                 end
@@ -133,6 +137,7 @@ module Arbitrage
             # 残JPY確認
             # 買い
             buyValue = amount * @value[:coincheck_ask]
+            puts "購入に必要なJPY : " + buyValue.to_s
             if @asset[:coincheck_jpy] < buyValue
                 return false
             else
@@ -143,6 +148,7 @@ module Arbitrage
             # 残BTC確認
             # 売り
             sellValue = amount * @value[:zaif_bid]
+            puts "販売に必要なBTC : " + amount.to_s
             if @asset[:zaif_btc] < amount
                 return false
             else
@@ -155,6 +161,7 @@ module Arbitrage
              # 残JPY確認
             # 買い
             buyValue = amount * @value[:zaif_ask]
+            puts "購入に必要なJPY : " + buyValue.to_s
             if @asset[:zaif_jpy] < buyValue
                 return false
             else
@@ -165,6 +172,7 @@ module Arbitrage
             # 残BTC確認
             # 売り
             sellValue = amount * @value[:coincheck_bid]
+            puts "販売に必要なBTC : " + amount.to_s
             if @asset[:coincheck_btc] < amount
                 return false
             else
@@ -188,12 +196,14 @@ module Arbitrage
         def adjustAsset_demo
             if(@asset[:coincheck_btc] < @asset[:zaif_btc])
                 amount = (@asset[:zaif_btc] - @asset[:coincheck_btc]) / 2
+                @asset[:zaif_btc] -= amount
+                @asset[:zaif_btc] -= @btcSendCost; # BTC送金コストを引く
                 @asset[:coincheck_btc] += amount;
-                @asset[:zaif_btc] -= amount - @btcSendCost; # BTC送金コストを引く
-            elsif(@asset[:zaif_btc] < @asset[:coincheck_btc])
+            elsif(@asset[:coincheck_btc] > @asset[:zaif_btc])
                 amount = (@asset[:coincheck_btc] - @asset[:zaif_btc]) / 2
+                @asset[:coincheck_btc] -= amount
+                @asset[:coincheck_btc] -= @btcSendCost; # BTC送金コストを引く
                 @asset[:zaif_btc] += amount;
-                @asset[:coincheck_btc] -= amount - @btcSendCost; # BTC送金コストを引く
             else
                 false
             end
