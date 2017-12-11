@@ -93,39 +93,43 @@ module Arbitrage
         
          # デモ取引
         def demoTrade
-            if(@profit[:buy_coincheck] > @needProfit)
+            if @profit[:buy_coincheck] > @needProfit
                 p "buy coincheck"
-                if buy_coincheck_demo(@tradeAmount)
-                    puts "売買成功"
-                else
+                if buy_coincheck_demo(@tradeAmount) == :need_jpy
                     puts "売買失敗"
-                    puts "資金調整"
-                    adjustAsset_demo
+                    puts "資金調整(JPY)が必要です"
+                elsif buy_coincheck_demo(@tradeAmount) == :need_btc
+                    puts "資金調整(BTC)"
+                    adjustAsset_demo(:btc)
                     if buy_coincheck_demo(@tradeAmount)
                         puts "再売買成功"
                     else
                         puts "----------------異常が発生しました-------------"
-                        puts "たぶん資金不足"
+                        puts ""
                         puts "-----------------------------------------------"
                         exit
                     end
+                else
+                    puts "売買成功"
                 end
-            elsif(@profit[:buy_zaif] > @needProfit)
+            elsif @profit[:buy_zaif] > @needProfit
                 p "buy zaif"
-                if buy_zaif_demo(@tradeAmount)
-                    puts "売買成功"
-                else
+                if buy_zaif_demo(@tradeAmount) == :need_jpy
                     puts "売買失敗"
-                    puts "資金調整"
-                    adjustAsset_demo
-                    if buy_coincheck_demo(@tradeAmount)
+                    puts "資金調整(JPY)が必要です"
+                elsif buy_zaif_demo(@tradeAmount) == :need_btc
+                    puts "資金調整(BTC)"
+                    adjustAsset_demo(:btc)
+                    if buy_zaif_demo(@tradeAmount)
                         puts "再売買成功"
                     else
                         puts "----------------異常が発生しました-------------"
-                        puts "たぶん資金不足"
+                        puts ""
                         puts "-----------------------------------------------"
                         exit
                     end
+                else
+                    puts "売買成功"
                 end
             else
                 p "取引は行われませんでした。"
@@ -139,7 +143,7 @@ module Arbitrage
             buyValue = amount * @value[:coincheck_ask]
             puts "購入に必要なJPY : " + buyValue.to_s
             if @asset[:coincheck_jpy] < buyValue
-                return false
+                return :need_jpy
             else
                 @asset[:coincheck_jpy] -= buyValue
                 @asset[:coincheck_btc] += amount
@@ -150,7 +154,7 @@ module Arbitrage
             sellValue = amount * @value[:zaif_bid]
             puts "販売に必要なBTC : " + amount.to_s
             if @asset[:zaif_btc] < amount
-                return false
+                return :need_btc
             else
                 @asset[:zaif_jpy] += sellValue
                 @asset[:zaif_btc] -= amount
@@ -163,7 +167,7 @@ module Arbitrage
             buyValue = amount * @value[:zaif_ask]
             puts "購入に必要なJPY : " + buyValue.to_s
             if @asset[:zaif_jpy] < buyValue
-                return false
+                return :need_jpy
             else
                 @asset[:zaif_jpy] -= buyValue
                 @asset[:zaif_btc] += amount
@@ -174,7 +178,7 @@ module Arbitrage
             sellValue = amount * @value[:coincheck_bid]
             puts "販売に必要なBTC : " + amount.to_s
             if @asset[:coincheck_btc] < amount
-                return false
+                return :need_btc
             else
                 @asset[:coincheck_jpy] += sellValue
                 @asset[:coincheck_btc] -= amount
@@ -193,7 +197,8 @@ module Arbitrage
         # BTCのみ自動調整する
         # BTC送金手数料を加味する
         # 送金手数料0.0005BTC
-        def adjustAsset_demo
+        # adjust_type: :jpy or :btc
+        def adjustAsset_demo(adjust_type = :btc)
             if(@asset[:coincheck_btc] < @asset[:zaif_btc])
                 amount = (@asset[:zaif_btc] - @asset[:coincheck_btc]) / 2
                 @asset[:zaif_btc] -= amount

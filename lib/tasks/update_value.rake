@@ -20,4 +20,9 @@ namespace :update_value do
             p "-------------------"
         end
     end
+    
+    task :adjustJpy => :environment do
+        include Arbitrage
+        p "資金調整(JPY)"
+    end
 end
