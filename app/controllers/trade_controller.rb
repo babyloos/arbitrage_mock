@@ -66,16 +66,27 @@ class TradeController < ApplicationController
     
     def ajax
         # 価格情報をjsonで出力
+        
         asset = Asset.last
         value = Value.last
         profit = Profit.last
+        
+        # coincheck総資産
+        coincheck_asset = asset.coincheck_jpy + (asset.coincheck_btc * value.coincheck_bid)
+        # zaif総資産
+        zaif_asset = asset.zaif_jpy + (asset.zaif_btc * value.zaif_bid)
+        # 総資産
+        total_asset = coincheck_asset + zaif_asset
         
         # p = DataUpdate.new
         # profit = p.profit
         @data = [
             "asset": asset,
             "value": value,
-            "profit": profit
+            "profit": profit,
+            "coincheck_asset": coincheck_asset,
+            "zaif_asset": zaif_asset,
+            "total_asset": total_asset
         ]
         render :json => @data
     end

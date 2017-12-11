@@ -15,6 +15,9 @@
                             <tr>
                                 <th>BTC</th><td class="coincheck_btc"></td><td class="zaif_btc"></td><td class="sum_btc"></td>
                             </tr>
+                            <tr>
+                                <th>総資産</th><td class="coincheck_asset"></td><td class="zaif_asset"></td><td class="total_asset"></td>
+                            </tr>
                     </tbody>
             </table>
         </div>
@@ -78,12 +81,21 @@
             var asset = data.asset
             var profit = data.profit
             var value = data.value
+            var coincheck_asset = data.coincheck_asset
+            var zaif_asset = data.zaif_asset
+            var total_asset = data.total_asset
             
             // 資産
             $(".asset .coincheck_jpy").text(Math.round(asset.coincheck_jpy));
             $(".asset .coincheck_btc").text(asset.coincheck_btc);
+            $(".asset .coincheck_asset").text(coincheck_asset);
+            
             $(".asset .zaif_jpy").text(Math.round(asset.zaif_jpy));
             $(".asset .zaif_btc").text(asset.zaif_btc);
+            $(".asset .zaif_asset").text(zaif_asset);
+            // 総資産
+            $(".asset .total_asset").text(total_asset);
+            
             // 合計値
             $(".asset .sum_jpy").text(parseFloat(asset.coincheck_jpy) + parseFloat(asset.zaif_jpy));
             $(".asset .sum_btc").text(parseFloat(asset.coincheck_btc) + parseFloat(asset.zaif_btc));
