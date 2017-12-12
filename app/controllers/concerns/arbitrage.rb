@@ -24,7 +24,7 @@ module Arbitrage
             @zaifApi = API.new(api_key: ENV["ZAIF_API_KEY"], api_secret: ENV["ZAIF_API_SECRET"])
             @value = Value.last
             @btcSendCost = 0.0005 # BTC送金手数料(BTC)
-            @tradeAmount = 0.05 # １度に取引する数量(BTC)
+            @tradeAmount = 1 # １度に取引する数量(BTC)
             # 資産調整ごとに目標とする利益
             # 資産調整ごとに必要な利益(%)を手数料を加味して算出
             # 最高販売価格を元にBTC送金手数料の割合を算出
@@ -33,7 +33,7 @@ module Arbitrage
             bestBid = @value.coincheck_bid >= @value.zaif_bid ? @value.coincheck_bid : @value.zaif_bid
             adjustBtcFee = bestBid * @btcSendCost
             feePer = adjustBtcFee / bestBid * 100 # 資産調整ごとに必要な手数料の割合(%)
-            @profitRequiredForOneAdjustAsset = 0.01 + feePer # 資産調整ごとに必要な利益(%)
+            @profitRequiredForOneAdjustAsset = feePer # 資産調整ごとに必要な利益(%)
             # puts "bestBid : " + bestBid.to_s
             # puts "adjustBtcFee : " + adjustBtcFee.to_s
             # puts "資産調整ごとに必要な利益 : " + @profitRequiredForOneAdjustAsset.to_s + "%"
@@ -253,8 +253,13 @@ module Arbitrage
             available_trade_counts.push(@asset.zaif_jpy / (@value.zaif_bid * @tradeAmount))
             
             # 最終的に一番少ない取引可能回数
-            available_trade_count = available_trade_counts.sort[0]
+            available_trade_count = available_trade_counts.sort[0].floor
+            # puts "現在の取引回数候補は " + available_trade_counts.to_s + " です"
             puts "現在の最少可能取引回数は " + available_trade_count.to_s + " です"
+            if available_trade_count == 0
+                puts "JPYの資産移動を行います"
+                DataUpdate::adjustAssetJpy_demo
+            end
             
             # １回の取引ごとの最低必要利益を計算する
             @profitRequiredForOneTransaction = @profitRequiredForOneAdjustAsset / available_trade_count # １回の資産調整ごとに必要な利益(%)
