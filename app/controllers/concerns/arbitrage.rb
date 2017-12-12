@@ -52,7 +52,7 @@ module Arbitrage
             coincheckData = JSON.parse(response.body)
             begin
                 zaifData = @zaifApi.get_ticker("btc")
-            rescue ConnectionFailedException => e
+            rescue ConnectionFailedException, Net::OpenTimeout => e
                 puts "zaifへのアクセスに失敗したっぽいっす"
                 puts "message : " + e.message
                 puts "もういっかいだけ試してみるっす"
@@ -115,58 +115,12 @@ module Arbitrage
             
             if buy_coincheck_profit_per > @profitRequiredForOneTransaction
                 p "buy coincheck"
-                if buy_coincheck_demo(@tradeAmount) == :need_jpy
-                    puts "売買失敗"
-                    puts "資金調整(JPY)が必要です"
-                    DataUpdate::adjustAssetJpy_demo
-                    @asset = Asset.last
-                    puts "資金調整(JPY)しました"
-                    if buy_coincheck_demo(@tradeAmount)
-                        puts "再売買成功"
-                    else
-                        puts "----------------異常が発生しました-------------"
-                        exit
-                    end
-                elsif buy_coincheck_demo(@tradeAmount) == :need_btc
-                    puts "資金調整(BTC)"
-                    adjustAsset_demo(:btc)
-                    if buy_coincheck_demo(@tradeAmount)
-                        puts "再売買成功"
-                    else
-                        puts "----------------異常が発生しました-------------"
-                        exit
-                    end
-                else
-                    puts "売買成功"
-                end
+                buy_coincheck_demo(@tradeAmount)
             elsif buy_zaif_profit_per > @profitRequiredForOneTransaction
                 p "buy zaif"
-                if buy_zaif_demo(@tradeAmount) == :need_jpy
-                    puts "売買失敗"
-                    puts "資金調整(JPY)が必要です"
-                    DataUpdate::adjustAssetJpy_demo
-                    @asset = Asset.last
-                    puts "資金調整(JPY)しました"
-                    if buy_zaif_demo(@tradeAmount)
-                        puts "再売買成功"
-                    else
-                        puts "----------------異常が発生しました-------------"
-                        exit
-                    end
-                elsif buy_zaif_demo(@tradeAmount) == :need_btc
-                    puts "資金調整(BTC)"
-                    adjustAsset_demo(:btc)
-                    if buy_zaif_demo(@tradeAmount)
-                        puts "再売買成功"
-                    else
-                        puts "----------------異常が発生しました-------------"
-                        exit
-                    end
-                else
-                    puts "売買成功"
-                end
+                buy_zaif_demo(@tradeAmount)
             else
-                puts "取引は行われませんでした。"
+                puts "利益が規定値以下のため取引は行われませんでした。"
             end
         end
         
@@ -254,11 +208,19 @@ module Arbitrage
             
             # 最終的に一番少ない取引可能回数
             available_trade_count = available_trade_counts.sort[0].floor
-            # puts "現在の取引回数候補は " + available_trade_counts.to_s + " です"
+            
             puts "現在の最少可能取引回数は " + available_trade_count.to_s + " です"
             if available_trade_count == 0
-                puts "JPYの資産移動を行います"
-                DataUpdate::adjustAssetJpy_demo
+                # BTC、JPYのどちらを移動する必要があるのかの調査
+                if (@asset.coincheck_btc / @tradeAmount) < 1 || (@asset.zaif_btc / @tradeAmount) < 1
+                    # BTCの移動
+                    puts "BTCの資産移動を行います"
+                    adjustAssetBtc
+                else
+                    # JPYの移動
+                    puts "JPYの資産移動を行います"
+                    adjustAssetJpy
+                end
             end
             
             # １回の取引ごとの最低必要利益を計算する
@@ -323,34 +285,42 @@ module Arbitrage
             asset.save
         end
  
-        # 資金調整 (JPY)
-        # def ajustAssetJpy
-            # if(@asset[:coincheck_jpy] < @asset[:zaif_jpy])
-            #     amount = ((@asset[:zaif_jpy] - @asset[:coincheck_jpy]) / 2).round
-            #     @asset[:coincheck_jpy] += amount;
-            #     @asset[:zaif_jpy] -= amount;
-            # elsif(@asset[:zaif_jpy] < @asset[:coincheck_jpy])
-            #     amount = ((@asset[:coincheck_jpy] - @asset[:zaif_jpy]) / 2).round
-            #     @asset[:zaif_jpy] += amount;
-            #     @asset[:coincheck_jpy] -= amount;
-            # else
-            #     false
-            # end
-        # end
+        # 資金調整(JPY)
+        def adjustAssetJpy
+            if(@asset[:coincheck_jpy] < @asset[:zaif_jpy])
+                amount = ((@asset[:zaif_jpy] - @asset[:coincheck_jpy]) / 2).round
+                @asset[:coincheck_jpy] += amount;
+                @asset[:zaif_jpy] -= amount;
+                
+                updateAsset
+            elsif(@asset[:zaif_jpy] < @asset[:coincheck_jpy])
+                amount = ((@asset[:coincheck_jpy] - @asset[:zaif_jpy]) / 2).round
+                @asset[:zaif_jpy] += amount;
+                @asset[:coincheck_jpy] -= amount;
+                
+                updateAsset
+            else
+                false
+            end
+        end
         
         # 資金調整(BTC)
         def adjustAssetBtc
-            # if(@asset[:coincheck_btc] < @asset[:zaif_btc])
-            #     amount = (@asset[:zaif_btc] - @asset[:coincheck_btc]) / 2
-            #     @asset[:coincheck_btc] += amount;
-            #     @asset[:zaif_btc] -= amount;
-            # elsif(@asset[:zaif_btc] < @asset[:coincheck_btc])
-            #     amount = (@asset[:coincheck_btc] - @asset[:zaif_btc]) / 2
-            #     @asset[:zaif_btc] += amount;
-            #     @asset[:coincheck_btc] -= amount;
-            # else
-            #     false
-            # end
+            if(@asset[:coincheck_btc] < @asset[:zaif_btc])
+                amount = (@asset[:zaif_btc] - @asset[:coincheck_btc]) / 2
+                @asset[:coincheck_btc] += amount;
+                @asset[:zaif_btc] -= amount;
+                
+                updateAsset
+            elsif(@asset[:zaif_btc] < @asset[:coincheck_btc])
+                amount = (@asset[:coincheck_btc] - @asset[:zaif_btc]) / 2
+                @asset[:zaif_btc] += amount;
+                @asset[:coincheck_btc] -= amount;
+                
+                updateAsset
+            else
+                false
+            end
         end
         
         # zaif注文発行
