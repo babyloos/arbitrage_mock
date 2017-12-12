@@ -24,7 +24,7 @@ module Arbitrage
             @zaifApi = API.new(api_key: ENV["ZAIF_API_KEY"], api_secret: ENV["ZAIF_API_SECRET"])
             @value = Value.last
             @btcSendCost = 0.0005 # BTC送金手数料(BTC)
-            @tradeAmount = 0.001 # １度に取引する数量(BTC)
+            @tradeAmount = 0.05 # １度に取引する数量(BTC)
             # 資産調整ごとに目標とする利益
             # 資産調整ごとに必要な利益(%)を手数料を加味して算出
             # 最高販売価格を元にBTC送金手数料の割合を算出
@@ -32,8 +32,8 @@ module Arbitrage
             # 上記２つのうち高いほうを手数料とする
             bestBid = @value.coincheck_bid >= @value.zaif_bid ? @value.coincheck_bid : @value.zaif_bid
             adjustBtcFee = bestBid * @btcSendCost
-            feePer = adjustBtcFee / bestBid * 100 # 割合(%)
-            @profitRequiredForOneAdjustAsset = 1 + feePer # 資産調整ごとに必要な利益(%)
+            feePer = adjustBtcFee / bestBid * 100 # 資産調整ごとに必要な手数料の割合(%)
+            @profitRequiredForOneAdjustAsset = 0.01 + feePer # 資産調整ごとに必要な利益(%)
             # puts "bestBid : " + bestBid.to_s
             # puts "adjustBtcFee : " + adjustBtcFee.to_s
             # puts "資産調整ごとに必要な利益 : " + @profitRequiredForOneAdjustAsset.to_s + "%"
@@ -105,7 +105,15 @@ module Arbitrage
         
          # デモ取引
         def demoTrade
-            if @profit[:buy_coincheck] > @profitRequiredForOneTransaction
+            # 利益を利益率に変換して、一度の取引で必要な利益率と比べる
+            buy_coincheck_profit_per = @profit[:buy_coincheck] / @value.zaif_bid * 100
+            buy_zaif_profit_per = @profit[:buy_zaif] / @value.coincheck_bid * 100
+            
+            
+            puts "コインチェックで買った場合の利益" + buy_coincheck_profit_per.to_s + "%"
+            puts "ザイフで買った場合の利益" + buy_zaif_profit_per.to_s + "%"
+            
+            if buy_coincheck_profit_per > @profitRequiredForOneTransaction
                 p "buy coincheck"
                 if buy_coincheck_demo(@tradeAmount) == :need_jpy
                     puts "売買失敗"
@@ -131,7 +139,7 @@ module Arbitrage
                 else
                     puts "売買成功"
                 end
-            elsif @profit[:buy_zaif] > @profitRequiredForOneTransaction
+            elsif buy_zaif_profit_per > @profitRequiredForOneTransaction
                 p "buy zaif"
                 if buy_zaif_demo(@tradeAmount) == :need_jpy
                     puts "売買失敗"
@@ -158,7 +166,7 @@ module Arbitrage
                     puts "売買成功"
                 end
             else
-                p "取引は行われませんでした。"
+                puts "取引は行われませんでした。"
             end
         end
         
@@ -215,7 +223,20 @@ module Arbitrage
         def profit
             profit = Profit.new(buy_coincheck: @value.zaif_bid - @value.coincheck_ask, buy_zaif: @value.coincheck_bid - @value.zaif_ask)
             profit.save
+            
+            # 利益をパーセンテージで表す
+            # 現在の取引量を加味して利益を出しそのパーセンテージを生成する
             @profit = profit
+            # 現在取引した場合の最大の利益
+            bestProfit = [@profit.buy_coincheck, @profit.buy_zaif].sort[-1]
+            # 現在の取引量で利益のパーセンテージを算出
+            @profit.buy_coincheck *= @tradeAmount
+            # 一番高い買い値を元に利益のパーセンテージを算出
+            bestBid = [@value.coincheck_bid, @value.zaif_bid].sort[-1]
+            profitPer = bestProfit / bestBid * 100
+            puts @tradeAmount.to_s + "BTC取引した場合の利益 " + sprintf("%g", @profit.buy_coincheck) + "円(" + sprintf("%g", profitPer.round(10)) + "%)"
+            
+            # １回の取引に必要な利益（%）をセット
             
             available_trade_counts = []
             # 現在の資産を元に１回の取引で必要な利益を計算する
@@ -233,10 +254,11 @@ module Arbitrage
             
             # 最終的に一番少ない取引可能回数
             available_trade_count = available_trade_counts.sort[0]
-            puts "現在の最少取引回数は " + available_trade_count.to_s + " です"
+            puts "現在の最少可能取引回数は " + available_trade_count.to_s + " です"
             
             # １回の取引ごとの最低必要利益を計算する
             @profitRequiredForOneTransaction = @profitRequiredForOneAdjustAsset / available_trade_count # １回の資産調整ごとに必要な利益(%)
+            puts "１回の取引ごとの最低必要利益は " + @profitRequiredForOneTransaction.to_s + "(%)です"
         end
         
         # 資金調整デモ
