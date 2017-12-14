@@ -259,17 +259,17 @@ module Arbitrage
         end
         
         # debug
-        private
+        # private
         
         # 現在の資産情報を元に１回に必要な利益を計算する
         # asset: 資産情報
         # adjustFee: 資産調整ごとに支払う手数料
         def calcNeedProfit(asset, adjustFee)
-            # TODO:
         end
         
         # amountを考慮して裁定取引利益を計算する
         # 実際に取引可能な数量を考慮し利益を計算する
+        # 両取引所のbestBid, bestAskの価格、数量を元に計算する
         # return {profit: xxx, amount: yyy, order: "buy_coincheck" or "buy_zaif", per1BtcProfit: xxx}
         def profitWithAmount(coincheckDepth, zaifDepth)
             # 利益の計算
@@ -299,6 +299,57 @@ module Arbitrage
             end
             
             return {profit: bestProfit, amount: minAmount, order: order, per1BtcProfit: bestProfit/minAmount}
+        end
+        
+        # 取引する数量を指定して裁定取引利益を計算する
+        def profitWidthDesignationAmount(coincheckDepth, zaifDepth, amount)
+            
+        end
+        
+        # 板情報と数量を受け取り取引した場合の合計取引価格を計算する
+        def calcTradeValueSum(depth, amount)
+            ret = {buy: 0, sell: 0}
+            # 購入価格
+            sumAmount = 0
+            sumValue = 0
+            depth["asks"].each do |d|
+                # 取引量が指定数量から出ないように
+                # まるまる取引出来る場合
+                if sumAmount != amount
+                    if sumAmount + d[1].to_f <= amount
+                        sumAmount += d[1].to_f
+                        sumValue += d[0].to_f * d[1].to_f
+                    # まるまるいれると超えちゃう場合
+                    else
+                        remaindAddAmount = amount - sumAmount
+                        sumAmount += remaindAddAmount # これですっぽり入る
+                        sumValue += d[0].to_f * remaindAddAmount
+                    end
+                end
+            end
+            ret[:buy] = sumValue
+            
+            # 販売価格
+            sumAmount = 0
+            sumValue = 0
+            depth["bids"].each do |d|
+                # 取引量が指定数量から出ないように
+                # まるまる取引出来る場合
+                if sumAmount != amount
+                    if sumAmount + d[1].to_f <= amount
+                        sumAmount += d[1].to_f
+                        sumValue += d[0].to_f * d[1].to_f
+                    # まるまるいれると超えちゃう場合
+                    else
+                        remaindAddAmount = amount - sumAmount
+                        sumAmount += remaindAddAmount # これですっぽり入る
+                        sumValue += d[0].to_f * remaindAddAmount
+                    end
+                end
+            end
+            ret[:sell] = sumValue
+            
+            ret
         end
     end
 end
