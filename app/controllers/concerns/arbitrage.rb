@@ -27,6 +27,7 @@ module Arbitrage
             @tradeAmount = nil # １度に取引する数量(BTC)
             @asset = updateAsset
             @profit;
+            @requiredProfitForEachTransaction = 0.01 # １回の取引ごとに必要な利益(%)
         end
         
         # 価格情報の更新
@@ -82,11 +83,18 @@ module Arbitrage
             # １回の取引に必要な利益を計算する
             
             if @profit[:order] == "buy_coincheck"
-                puts @profit[:amount].to_s + "BTCをコインチェックでBTC買いザイフで売った場合の利益 : " + @profit[:profit].to_s
+                profitPer = @profit[:profit] / @profit[:amount] / @value.coincheck_ask * 100
+                puts @profit[:amount].to_s + "BTCをコインチェックでBTC買いザイフで売った場合の利益 : " + @profit[:profit].to_s + " 利益率 : " + profitPer.to_s
                 # 利益が規定値以上だった場合実際の取引を行う
+                # 利率を計算し比較する
+                if profitPer > @requiredProfitForEachTransaction
+                end
             elsif @profit[:order] == "buy_zaif"
-                puts @profit[:amount].to_s + "BTCをザイフでBTC買いコインチェックで売った場合の利益 : " + @profit[:profit].to_s
+                profitPer = @profit[:profit] / @profit[:amount] / @value.zaif_ask * 100
+                puts @profit[:amount].to_s + "BTCをザイフでBTC買いコインチェックで売った場合の利益 : " + @profit[:profit].to_s + " 利益率 : " + profitPer.to_s
                 # 利益が規定値以上だった場合実際の取引を行う
+                if profitPer > @requiredProfitForEachTransaction
+                end
             end
             
         end
