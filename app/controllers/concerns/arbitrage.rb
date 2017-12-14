@@ -24,7 +24,7 @@ module Arbitrage
             @zaifApi = API.new(api_key: ENV["ZAIF_API_KEY"], api_secret: ENV["ZAIF_API_SECRET"])
             @value = nil
             @btcSendFee = 0.0005 # BTC送金手数料(BTC)
-            @tradeAmount = nil # １度に取引する数量(BTC)
+            @tradeAmount = 0.1 # １度に取引する数量(BTC)
             @asset = Asset.last
             @profit;
             @requiredProfitForEachTransaction = 0.001 # １回の取引ごとに必要な利益(%)
@@ -38,7 +38,8 @@ module Arbitrage
             zaifDepth = @zaifApi.get_depth("btc")
             
             # 利益計算し取得
-            @profit = profitWithAmount(coincheckDepth, zaifDepth)
+            # @profit = profitWithAmount(coincheckDepth, zaifDepth)
+            @profit = profitWidthDesignationAmount(coincheckDepth, zaifDepth, @tradeAmount)
             profit = Profit.new(profit: @profit[:profit], amount: @profit[:amount], order: @profit[:order], per1BtcProfit: @profit[:per1BtcProfit])
             profit.save
         
@@ -303,7 +304,19 @@ module Arbitrage
         
         # 取引する数量を指定して裁定取引利益を計算する
         def profitWidthDesignationAmount(coincheckDepth, zaifDepth, amount)
+            coincheckValue = calcTradeValueSum(coincheckDepth, amount)
+            zaifValue = calcTradeValueSum(zaifDepth, amount)
+            buy_coincheck_profit = zaifValue[:sell] - coincheckValue[:buy]
+            buy_zaif_profit = coincheckValue[:sell] - zaifValue[:buy]
+            if buy_coincheck_profit >= buy_zaif_profit
+                bestProfit = buy_coincheck_profit
+                order = "buy_coincheck"
+            else
+                bestProfit = buy_zaif_profit
+                order = "buy_zaif"
+            end
             
+            return {profit: bestProfit, amount: amount, order: order, per1BtcProfit: bestProfit/amount}
         end
         
         # 板情報と数量を受け取り取引した場合の合計取引価格を計算する
