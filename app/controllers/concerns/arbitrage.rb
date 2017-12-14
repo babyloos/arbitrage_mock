@@ -25,9 +25,9 @@ module Arbitrage
             @value = nil
             @btcSendFee = 0.0005 # BTC送金手数料(BTC)
             @tradeAmount = nil # １度に取引する数量(BTC)
-            @asset = updateAsset
+            @asset = Asset.last
             @profit;
-            @requiredProfitForEachTransaction = 0.01 # １回の取引ごとに必要な利益(%)
+            @requiredProfitForEachTransaction = 0.001 # １回の取引ごとに必要な利益(%)
         end
         
         # 価格情報の更新
@@ -39,6 +39,8 @@ module Arbitrage
             
             # 利益計算し取得
             @profit = profitWithAmount(coincheckDepth, zaifDepth)
+            profit = Profit.new(profit: @profit[:profit], amount: @profit[:amount], order: @profit[:order], per1BtcProfit: @profit[:per1BtcProfit])
+            profit.save
         
             value = Value.new(coincheck_bid: coincheckDepth["bids"].first[0], coincheck_ask: coincheckDepth["asks"].first[0], zaif_bid:  zaifDepth["bids"].first[0], zaif_ask: zaifDepth["asks"].first[0])
             value.save
@@ -46,6 +48,7 @@ module Arbitrage
         end
         
         # 資産情報の更新
+        # 資産情報をDBに保存
         def updateAsset
             if @production
                 # coincheck
@@ -57,9 +60,8 @@ module Arbitrage
                 asset.save
                 asset
             else
-                lastAsset = Asset.last
-                asset = Asset.new(coincheck_jpy: lastAsset.coincheck_jpy, coincheck_btc: lastAsset.coincheck_btc,
-                                    zaif_jpy: lastAsset.zaif_jpy, zaif_btc: lastAsset.zaif_btc)
+                asset = Asset.new(coincheck_jpy: @asset[:coincheck_jpy], coincheck_btc: @asset[:coincheck_btc],
+                                    zaif_jpy: @asset[:zaif_jpy], zaif_btc: @asset[:zaif_btc])
                 asset.save
                 asset
             end
@@ -83,44 +85,64 @@ module Arbitrage
             # １回の取引に必要な利益を計算する
             
             if @profit[:order] == "buy_coincheck"
+                # 利率を計算し比較する
                 profitPer = @profit[:profit] / @profit[:amount] / @value.coincheck_ask * 100
                 puts @profit[:amount].to_s + "BTCをコインチェックでBTC買いザイフで売った場合の利益 : " + @profit[:profit].to_s + " 利益率 : " + profitPer.to_s
                 # 利益が規定値以上だった場合実際の取引を行う
-                # 利率を計算し比較する
                 if profitPer > @requiredProfitForEachTransaction
+                    ret = buy_coincheck_demo(@profit[:amount], @value.coincheck_ask)
+                    if ret == :need_jpy
+                        puts "JPYが足りません。資金調整が必要です。"
+                    elsif ret == :need_btc
+                        puts "BTCが足りません。資金調整が必要です。"
+                    else
+                        puts @profit[:amount].to_s + "BTCをコインチェックで買ってザイフで売り" + @profit[:profit].to_s + "円の粗利が出ました"
+                    end
                 end
             elsif @profit[:order] == "buy_zaif"
+                # 利率を計算し比較する
                 profitPer = @profit[:profit] / @profit[:amount] / @value.zaif_ask * 100
                 puts @profit[:amount].to_s + "BTCをザイフでBTC買いコインチェックで売った場合の利益 : " + @profit[:profit].to_s + " 利益率 : " + profitPer.to_s
                 # 利益が規定値以上だった場合実際の取引を行う
                 if profitPer > @requiredProfitForEachTransaction
+                    ret = buy_zaif_demo(@profit[:amount], @value.zaif_ask)
+                    if ret == :need_jpy
+                        puts "JPYが足りません。資金調整が必要です。"
+                    elsif ret == :need_btc
+                        puts "BTCが足りません。資金調整が必要です。"
+                    else
+                        puts @profit[:amount].to_s + "BTCをザイフで買ってコインチェックで売り" + @profit[:profit].to_s + "円の粗利が出ました"
+                    end
                 end
             end
             
         end
         
         # coincheckで買ってzaifで売る
+        # 資産が足りなければ調整する
         def buy_coincheck_demo(amount, value)
             # 残JPY確認
             # 買い
             buyValue = amount * value
-            puts "購入に必要なJPY : " + buyValue.to_s
+            # puts "購入に必要なJPY : " + buyValue.to_s
             if @asset[:coincheck_jpy] < buyValue
                 return :need_jpy
             else
                 @asset[:coincheck_jpy] -= buyValue
                 @asset[:coincheck_btc] += amount
+                true
             end
             
             # 残BTC確認
             # 売り
             sellValue = amount * value
-            puts "販売に必要なBTC : " + amount.to_s
+            # puts "販売に必要なBTC : " + amount.to_s
             if @asset[:zaif_btc] < amount
                 return :need_btc
             else
                 @asset[:zaif_jpy] += sellValue
                 @asset[:zaif_btc] -= amount
+                true
             end
             
             updateAsset
@@ -130,23 +152,25 @@ module Arbitrage
              # 残JPY確認
             # 買い
             buyValue = amount * value
-            puts "購入に必要なJPY : " + buyValue.to_s
+            # puts "購入に必要なJPY : " + buyValue.to_s
             if @asset[:zaif_jpy] < buyValue
                 return :need_jpy
             else
                 @asset[:zaif_jpy] -= buyValue
                 @asset[:zaif_btc] += amount
+                true
             end
             
             # 残BTC確認
             # 売り
             sellValue = amount * value
-            puts "販売に必要なBTC : " + amount.to_s
+            # puts "販売に必要なBTC : " + amount.to_s
             if @asset[:coincheck_btc] < amount
                 return :need_btc
             else
                 @asset[:coincheck_jpy] += sellValue
                 @asset[:coincheck_btc] -= amount
+                true
             end
             
             updateAsset
@@ -228,8 +252,8 @@ module Arbitrage
                 end
             rescue APIErrorException => e
                 # 資産移動の必要性が出たらここで行う
-                p "zaifでの売買で問題が発生しました。"
-                p e.message
+                puts "zaifでの売買で問題が発生しました。"
+                puts e.message
             end
         end
         
@@ -245,8 +269,8 @@ module Arbitrage
             end
             
             if !ret["success"]
-                p "coincheckでの売買で問題が発生しました。"
-                p ret["error"]
+                puts "coincheckでの売買で問題が発生しました。"
+                puts ret["error"]
             end
         end
         
@@ -262,7 +286,7 @@ module Arbitrage
         
         # amountを考慮して裁定取引利益を計算する
         # 実際に取引可能な数量を考慮し利益を計算する
-        # return {profit: xxx, amount: yyy, order: "buy_coincheck" or "buy_zaif", per1btcProfit: xxx}
+        # return {profit: xxx, amount: yyy, order: "buy_coincheck" or "buy_zaif", per1BtcProfit: xxx}
         def profitWithAmount(coincheckDepth, zaifDepth)
             # 利益の計算
             coincheckBestBid = coincheckDepth["bids"].first
@@ -290,7 +314,7 @@ module Arbitrage
                 order = "buy_zaif"
             end
             
-            return {profit: bestProfit, amount: minAmount, order: order, per1btcProfit: bestProfit/minAmount}
+            return {profit: bestProfit, amount: minAmount, order: order, per1BtcProfit: bestProfit/minAmount}
         end
     end
 end

@@ -7,10 +7,10 @@ namespace :update_value do
         d = DataUpdate.new
         # sleep(1)
         while true do
-            p "-------------------"
+            puts "-------------------"
             d.updateValue
-            d.updateAsset
             d.trade
+            d.updateAsset
             sleep(1)
         end
     end

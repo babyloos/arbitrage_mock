@@ -78,8 +78,6 @@ class TradeController < ApplicationController
         # 総資産
         total_asset = coincheck_asset + zaif_asset
         
-        # p = DataUpdate.new
-        # profit = p.profit
         @data = [
             "asset": asset,
             "value": value,
