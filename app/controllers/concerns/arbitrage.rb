@@ -87,10 +87,10 @@ module Arbitrage
             if @profit[:order] == "buy_coincheck"
                 # 利率を計算し比較する
                 profitPer = @profit[:profit] / @profit[:amount] / @value.coincheck_ask * 100
-                puts @profit[:amount].to_s + "BTCをコインチェックでBTC買いザイフで売った場合の利益 : " + @profit[:profit].to_s + " 利益率 : " + profitPer.to_s
+                puts @profit[:amount].to_s + "BTCをコインチェックで買いザイフで売った場合の利益 : " + @profit[:profit].to_s + " 利益率 : " + profitPer.to_s
                 # 利益が規定値以上だった場合実際の取引を行う
                 if profitPer > @requiredProfitForEachTransaction
-                    ret = buy_coincheck_demo(@profit[:amount], @value.coincheck_ask)
+                    ret = buy_coincheck_demo(@profit[:amount], @value.coincheck_ask, @value.zaif_bid)
                     if ret == :need_jpy
                         puts "JPYが足りません。資金調整が必要です。"
                     elsif ret == :need_btc
@@ -102,10 +102,10 @@ module Arbitrage
             elsif @profit[:order] == "buy_zaif"
                 # 利率を計算し比較する
                 profitPer = @profit[:profit] / @profit[:amount] / @value.zaif_ask * 100
-                puts @profit[:amount].to_s + "BTCをザイフでBTC買いコインチェックで売った場合の利益 : " + @profit[:profit].to_s + " 利益率 : " + profitPer.to_s
+                puts @profit[:amount].to_s + "BTCをザイフで買いコインチェックで売った場合の利益 : " + @profit[:profit].to_s + " 利益率 : " + profitPer.to_s
                 # 利益が規定値以上だった場合実際の取引を行う
                 if profitPer > @requiredProfitForEachTransaction
-                    ret = buy_zaif_demo(@profit[:amount], @value.zaif_ask)
+                    ret = buy_zaif_demo(@profit[:amount], @value.zaif_ask, @value.coincheck_bid)
                     if ret == :need_jpy
                         puts "JPYが足りません。資金調整が必要です。"
                     elsif ret == :need_btc
@@ -120,57 +120,44 @@ module Arbitrage
         
         # coincheckで買ってzaifで売る
         # 資産が足りなければ調整する
-        def buy_coincheck_demo(amount, value)
+        def buy_coincheck_demo(amount, buyValue, sellValue)
             # 実際に売買する前に売買するだけの資金があるかチェックする
-            buyValue = amount * value
-            sellValue = amount * value
-            
-            if @asset[:coincheck_jpy] < buyValue
+            if @asset[:coincheck_jpy] < buyValue * amount
                 return :need_jpy
             elsif @asset[:zaif_btc] < amount
                 return :need_btc
             end
             
-            # 残JPY確認
             # 買い
-            @asset[:coincheck_jpy] -= buyValue
+            @asset[:coincheck_jpy] -= buyValue * amount
             @asset[:coincheck_btc] += amount
             
-            # 残BTC確認
             # 売り
-            @asset[:zaif_jpy] += sellValue
+            @asset[:zaif_jpy] += sellValue * amount
             @asset[:zaif_btc] -= amount
             
             updateAsset
             true
         end
         
-        def buy_zaif_demo(amount, value)
-            # 残JPY確認
-            # 買い
-            buyValue = amount * value
-            # puts "購入に必要なJPY : " + buyValue.to_s
-            if @asset[:zaif_jpy] < buyValue
+        def buy_zaif_demo(amount, buyValue, sellValue)
+            # 実際に売買する前に売買するだけの資金があるかチェックする
+            if @asset[:zaif_jpy] < sellValue * amount
                 return :need_jpy
-            else
-                @asset[:zaif_jpy] -= buyValue
-                @asset[:zaif_btc] += amount
-                true
+            elsif @asset[:coincheck_btc] < amount
+                return :need_btc
             end
             
-            # 残BTC確認
+            # 買い
+            @asset[:zaif_jpy] -= buyValue * amount
+            @asset[:zaif_btc] += amount
+            
             # 売り
-            sellValue = amount * value
-            # puts "販売に必要なBTC : " + amount.to_s
-            if @asset[:coincheck_btc] < amount
-                return :need_btc
-            else
-                @asset[:coincheck_jpy] += sellValue
-                @asset[:coincheck_btc] -= amount
-                true
-            end
+            @asset[:coincheck_jpy] += sellValue * amount
+            @asset[:coincheck_btc] -= amount
             
             updateAsset
+            true
         end
         
         # 資金調整デモ
