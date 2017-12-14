@@ -50,7 +50,10 @@
                         </tr>
                     </thead>
                     <tbody>
-                            <tr>
+                            <tr class="real">
+                                <th><span class="amount"></span>BTCあたりの利益</th><td class="buy_coincheck"></td><td class="buy_zaif"></td>
+                            </tr>
+                            <tr class="ideal">
                                 <th>1ビットコインあたりの利益</th><td class="buy_coincheck"></td><td class="buy_zaif"></td>
                             </tr>
                     </tbody>
@@ -107,8 +110,19 @@
             $(".value .zaif_ask").text(value.zaif_ask);
             
             // 利益
-            $(".profit .buy_coincheck").text(profit.buy_coincheck);
-            $(".profit .buy_zaif").text(profit.buy_zaif);
+            $(".profit .real .buy_coincheck").text("")
+            $(".profit .ideal .buy_coincheck").text("")
+            $(".profit .real .buy_zaif").text("")
+            $(".profit .ideal .buy_zaif").text("")
+            if(profit.order === "buy_coincheck") {
+                $(".profit .real .buy_coincheck").text(profit.profit)
+                $(".profit .ideal .buy_coincheck").text(profit.per1BtcProfit)
+            } else if(profit.order === "buy_zaif") {
+                $(".profit .real .buy_zaif").text(profit.profit)
+                $(".profit .ideal .buy_zaif").text(profit.per1BtcProfit)
+            }
+            $(".profit .real .amount").text(profit.amount)
+            
         })
         // 検索失敗時には、その旨をダイアログ表示
         .fail(function() {
