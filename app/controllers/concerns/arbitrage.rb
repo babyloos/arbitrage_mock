@@ -27,7 +27,7 @@ module Arbitrage
             @tradeAmount = 0.1 # １度に取引する数量(BTC)
             @asset = Asset.last
             @profit;
-            @requiredProfitForEachTransaction = 0.001 # １回の取引ごとに必要な利益(%)
+            @requiredProfitForEachTransaction = nil # １回の取引ごとに必要な利益(%)
         end
         
         # 価格情報の更新
@@ -37,9 +37,11 @@ module Arbitrage
             # zaifDepthの取得
             zaifDepth = @zaifApi.get_depth("btc")
             
+            # 必要利益を計算する
+            
             # 利益計算し取得
-            # @profit = profitWithAmount(coincheckDepth, zaifDepth)
-            @profit = profitWidthDesignationAmount(coincheckDepth, zaifDepth, @tradeAmount)
+            # @profit = profitWithAmount(coincheckDepth, zaifDepth) # bestAsk, bestBidの価格のみを使って取引する
+            @profit = profitWidthDesignationAmount(coincheckDepth, zaifDepth, @tradeAmount) # 固定数量を使って取引する
             profit = Profit.new(profit: @profit[:profit], amount: @profit[:amount], order: @profit[:order], per1BtcProfit: @profit[:per1BtcProfit])
             profit.save
         
@@ -262,10 +264,40 @@ module Arbitrage
         # debug
         # private
         
-        # 現在の資産情報を元に１回に必要な利益を計算する
+        # 現在の資産情報を元に１回に必要な利率を計算する
+        # 損失が出ないところを最低ラインとして利率を設定する
         # asset: 資産情報
         # adjustFee: 資産調整ごとに支払う手数料
-        def calcNeedProfit(asset, adjustFee)
+        def calcNeedProfit(asset, value, adjustFee, amount)
+            # 最低取引可能回数
+             available_trade_counts = []
+            # coincheck
+            # 連続購入した場合
+            available_trade_counts.push(asset.coincheck_btc / amount)
+            # 連続販売した場合
+            available_trade_counts.push(asset.coincheck_jpy / (value.coincheck_bid * amount))
+            # zaif
+            # 連続購入した場合
+            available_trade_counts.push(asset.zaif_btc / amount)
+            # 連続販売した場合
+            available_trade_counts.push(asset.zaif_jpy / (value.zaif_bid * amount))
+            # 最終的に一番少ない取引可能回数
+            available_trade_count = available_trade_counts.sort[0]
+            bestAsk = value.coincheck_ask <= value.coincheck_ask ? value.coincheck_ask : value.zaif_ask
+            
+            # 手数料のパーセンテージ
+            # BTC送金手数料とJPY送金手数料の高い方を手数料とする
+            adjustFee = adjustFee >= @btcSendFee * bestAsk ? adjustFee : @btcSendFee * bestAsk
+            adjustFeePer = adjustFee / bestAsk * 100
+            # １回の取引で必要な利率
+            requiredProfit = adjustFeePer / available_trade_count
+            
+            # debug
+            puts "bestAsk : " + bestAsk.to_s
+            puts "adjustFee : " + adjustFee.to_s
+            puts "最小取引可能回数 : " + available_trade_count.to_s
+            puts "手数料のパーセンテージ : " + adjustFeePer.to_s + "%"
+            requiredProfit
         end
         
         # amountを考慮して裁定取引利益を計算する
