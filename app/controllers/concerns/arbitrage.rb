@@ -398,7 +398,8 @@ module Arbitrage
                 order = "buy_zaif"
             end
             
-            return {profit: bestProfit, amount: minAmount, order: order}
+            # profit[:per1btc] = profit[:profit] / profit[:amount]
+            return {profit: bestProfit, amount: minAmount, order: order, per1btcProfit: bestProfit/minAmount}
         end
     end
 end
