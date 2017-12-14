@@ -27,4 +27,17 @@ namespace :update_value do
         p "両取引所のJPY資産が同じになるよう資金移動します"
         DataUpdate::adjustAssetJpy_demo
     end
+    
+    task :calcProfit => :environment do
+        include Arbitrage
+        d = DataUpdate.new
+        while true do
+            sleep(1)
+            profit = d.profitWithAmount
+            profit[:per1btc] = profit[:profit] / profit[:amount]
+            profit[:created] = Time.now
+            puts "----------------------------"
+            p profit
+        end
+    end
 end

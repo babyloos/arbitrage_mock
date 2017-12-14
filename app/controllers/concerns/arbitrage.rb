@@ -24,7 +24,7 @@ module Arbitrage
             @zaifApi = API.new(api_key: ENV["ZAIF_API_KEY"], api_secret: ENV["ZAIF_API_SECRET"])
             @value = Value.last
             @btcSendCost = 0.0005 # BTC送金手数料(BTC)
-            @tradeAmount = 1 # １度に取引する数量(BTC)
+            @tradeAmount = nil # １度に取引する数量(BTC)
             # 資産調整ごとに目標とする利益
             # 資産調整ごとに必要な利益(%)を手数料を加味して算出
             # 最高販売価格を元にBTC送金手数料の割合を算出
@@ -226,6 +226,9 @@ module Arbitrage
             # １回の取引ごとの最低必要利益を計算する
             @profitRequiredForOneTransaction = @profitRequiredForOneAdjustAsset / available_trade_count # １回の資産調整ごとに必要な利益(%)
             puts "１回の取引ごとの最低必要利益は " + @profitRequiredForOneTransaction.to_s + "(%)です"
+            
+            
+            # 板の厚さによって取引量を決定する
         end
         
         # 資金調整デモ
@@ -358,7 +361,44 @@ module Arbitrage
             end
         end
         
-        private
+        # debug
+        # private
         
+        # amountを考慮して裁定取引利益を計算する
+        # 実際に取引可能な数量を考慮し利益を計算する
+        # return {profit: xxx, amount: yyy, order: "buy_coincheck" or "buy_zaif"}
+        def profitWithAmount
+            # coincheckDepthの取得
+            coincheckDepth = JSON.parse(@coincheckApi.read_order_books.body)
+            # zaifDepthの取得
+            zaifDepth = @zaifApi.get_depth("btc")
+            # 利益の計算
+            coincheckBestBid = coincheckDepth["bids"].first
+            coincheckBestAsk = coincheckDepth["asks"].first
+            zaifBestBid = zaifDepth["bids"].first
+            zaifBestAsk = zaifDepth["asks"].first
+            
+            # 最少取引可能量
+            buy_coincheck_amount = [zaifBestBid[1].to_f, coincheckBestAsk[1].to_f].min
+            buy_zaif_amount = [coincheckBestBid[1].to_f, zaifBestAsk[1].to_f].min
+            # 最終的な最少取引可能量
+            minAmount = nil
+            # 発行オーダー
+            order = nil
+            
+            buy_coincheck_profit = (zaifBestBid[0].to_f - coincheckBestAsk[0].to_f) * buy_coincheck_amount
+            buy_zaif_profit = (coincheckBestBid[0].to_f - zaifBestAsk[0].to_f) * buy_zaif_amount
+            if buy_coincheck_profit >= buy_zaif_profit
+                bestProfit = buy_coincheck_profit
+                minAmount = buy_coincheck_amount
+                order = "buy_coincheck"
+            else
+                bestProfit = buy_zaif_profit
+                minAmount = buy_zaif_amount
+                order = "buy_zaif"
+            end
+            
+            return {profit: bestProfit, amount: minAmount, order: order}
+        end
     end
 end
