@@ -121,35 +121,32 @@ module Arbitrage
         # coincheckで買ってzaifで売る
         # 資産が足りなければ調整する
         def buy_coincheck_demo(amount, value)
-            # 残JPY確認
-            # 買い
+            # 実際に売買する前に売買するだけの資金があるかチェックする
             buyValue = amount * value
-            # puts "購入に必要なJPY : " + buyValue.to_s
+            sellValue = amount * value
+            
             if @asset[:coincheck_jpy] < buyValue
                 return :need_jpy
-            else
-                @asset[:coincheck_jpy] -= buyValue
-                @asset[:coincheck_btc] += amount
-                true
+            elsif @asset[:zaif_btc] < amount
+                return :need_btc
             end
+            
+            # 残JPY確認
+            # 買い
+            @asset[:coincheck_jpy] -= buyValue
+            @asset[:coincheck_btc] += amount
             
             # 残BTC確認
             # 売り
-            sellValue = amount * value
-            # puts "販売に必要なBTC : " + amount.to_s
-            if @asset[:zaif_btc] < amount
-                return :need_btc
-            else
-                @asset[:zaif_jpy] += sellValue
-                @asset[:zaif_btc] -= amount
-                true
-            end
+            @asset[:zaif_jpy] += sellValue
+            @asset[:zaif_btc] -= amount
             
             updateAsset
+            true
         end
         
         def buy_zaif_demo(amount, value)
-             # 残JPY確認
+            # 残JPY確認
             # 買い
             buyValue = amount * value
             # puts "購入に必要なJPY : " + buyValue.to_s
