@@ -182,11 +182,13 @@ module Arbitrage
                     @asset[:zaif_btc] -= amount
                     @asset[:zaif_btc] -= @btcSendFee; # BTC送金コストを引く
                     @asset[:coincheck_btc] += amount;
+                    saveAdjustAssetLog("coincheck", "btc", amount)
                 elsif(@asset[:coincheck_btc] > @asset[:zaif_btc])
                     amount = (@asset[:coincheck_btc] - @asset[:zaif_btc]) / 2
                     @asset[:coincheck_btc] -= amount
                     @asset[:coincheck_btc] -= @btcSendFee; # BTC送金コストを引く
                     @asset[:zaif_btc] += amount;
+                    saveAdjustAssetLog("zaif", "btc", amount)
                 else
                     false
                 end
@@ -196,16 +198,27 @@ module Arbitrage
                     @asset[:zaif_jpy] -= amount
                     @asset[:zaif_jpy] -= @jpySendFee; # jpy送金コストを引く
                     @asset[:coincheck_jpy] += amount;
+                    saveAdjustAssetLog("coincheck", "jpy", amount)
                 elsif(@asset[:coincheck_jpy] > @asset[:zaif_jpy])
                     amount = (@asset[:coincheck_jpy] - @asset[:zaif_jpy]) / 2
                     @asset[:coincheck_jpy] -= amount
                     @asset[:coincheck_jpy] -= @jpySendFee; # jpy送金コストを引く
                     @asset[:zaif_jpy] += amount;
+                    saveAdjustAssetLog("zaif", "jpy", amount)
                 else
                     false
                 end
             end
-        end 
+        end
+        
+        # 資産調整のログ記入
+        def saveAdjustAssetLog(toExchanges, type, amount)
+            adjustLog = AdjustLog.new()
+            adjustLog.toExchanges = toExchanges
+            adjustLog.type = type
+            adjustLog.amount = amount
+            adjustLog.save
+        end
         
         # 資金調整(JPY)
         # def adjustAssetJpy

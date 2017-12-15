@@ -1,0 +1,11 @@
+# Read about fixtures at http://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  toExchanges: MyString
+  type: 
+  amount: 1.5
+
+two:
+  toExchanges: MyString
+  type: 
+  amount: 1.5
