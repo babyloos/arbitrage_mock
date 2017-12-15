@@ -173,56 +173,37 @@ module Arbitrage
         # BTC送金手数料を加味する
         # 送金手数料0.0005BTC
         # adjust_type: :jpy or :btc
-        def adjustAsset_demo(adjust_type = :btc)
-            if(@asset[:coincheck_btc] < @asset[:zaif_btc])
-                amount = (@asset[:zaif_btc] - @asset[:coincheck_btc]) / 2
-                @asset[:zaif_btc] -= amount
-                @asset[:zaif_btc] -= @btcSendFee; # BTC送金コストを引く
-                @asset[:coincheck_btc] += amount;
-            elsif(@asset[:coincheck_btc] > @asset[:zaif_btc])
-                amount = (@asset[:coincheck_btc] - @asset[:zaif_btc]) / 2
-                @asset[:coincheck_btc] -= amount
-                @asset[:coincheck_btc] -= @btcSendFee; # BTC送金コストを引く
-                @asset[:zaif_btc] += amount;
-            else
-                false
+        def adjustAsset_demo(adjust_type)
+            if adjust_type == :btc
+                if(@asset[:coincheck_btc] < @asset[:zaif_btc])
+                    amount = (@asset[:zaif_btc] - @asset[:coincheck_btc]) / 2
+                    @asset[:zaif_btc] -= amount
+                    @asset[:zaif_btc] -= @btcSendFee; # BTC送金コストを引く
+                    @asset[:coincheck_btc] += amount;
+                elsif(@asset[:coincheck_btc] > @asset[:zaif_btc])
+                    amount = (@asset[:coincheck_btc] - @asset[:zaif_btc]) / 2
+                    @asset[:coincheck_btc] -= amount
+                    @asset[:coincheck_btc] -= @btcSendFee; # BTC送金コストを引く
+                    @asset[:zaif_btc] += amount;
+                else
+                    false
+                end
+            elsif adjust_type == :jpy
+                if(@asset[:coincheck_jpy] < @asset[:zaif_jpy])
+                    amount = (@asset[:zaif_jpy] - @asset[:coincheck_jpy]) / 2
+                    @asset[:zaif_jpy] -= amount
+                    @asset[:zaif_jpy] -= @jpySendFee; # jpy送金コストを引く
+                    @asset[:coincheck_jpy] += amount;
+                elsif(@asset[:coincheck_jpy] > @asset[:zaif_jpy])
+                    amount = (@asset[:coincheck_jpy] - @asset[:zaif_jpy]) / 2
+                    @asset[:coincheck_jpy] -= amount
+                    @asset[:coincheck_jpy] -= @jpySendFee; # jpy送金コストを引く
+                    @asset[:zaif_jpy] += amount;
+                else
+                    false
+                end
             end
         end 
-        
-        # 資金調整(JPY)デモ
-        # 実際には手動で行うのでこれはデバッグ用
-        # 外から使われるのでスタティックメソッドとする
-        # 常に少ない方から多い方に移動する
-        # amount: 移動するJPYの量 :autoなら両取引所で同じ金額になるようにする
-        def self.adjustAssetJpy_demo(move_amount = :auto)
-            
-            # 資金移動手数料
-            coincheckToZaifFee = 886
-            zaifToCoincheckFee = 1106
-            
-            lastAsset = Asset.last
-            asset = Asset.new(coincheck_jpy: lastAsset.coincheck_jpy, coincheck_btc: lastAsset.coincheck_btc, zaif_jpy: lastAsset.zaif_jpy, zaif_btc: lastAsset.zaif_btc)
-            
-            if asset.coincheck_jpy < asset.zaif_jpy
-                # 移動量が自動の場合
-                if move_amount == :auto
-                    amount = (asset.zaif_jpy - asset.coincheck_jpy) / 2
-                    asset.zaif_jpy -= amount
-                    asset.zaif_jpy -= zaifToCoincheckFee # 手数料を引く
-                    asset.coincheck_jpy += amount
-                end
-            elsif asset.coincheck_jpy > asset.zaif_jpy
-                # 移動量が自動の場合
-                if move_amount == :auto
-                    amount = (asset.coincheck_jpy - asset.zaif_jpy) / 2
-                    asset.coincheck_jpy -= amount
-                    asset.coincheck_jpy -= coincheckToZaifFee # 手数料を引く
-                    asset.zaif_jpy += amount 
-                end
-            end
-            
-            asset.save
-        end
         
         # 資金調整(JPY)
         # def adjustAssetJpy
@@ -275,20 +256,7 @@ module Arbitrage
         # asset: 資産情報
         # adjustFee: 資産調整ごとに支払う手数料
         def calcNeedProfit(asset, value, adjustJpyFee, amount)
-            # 最低取引可能回数
-             available_trade_counts = []
-            # coincheck
-            # 連続購入した場合
-            available_trade_counts.push(asset.coincheck_btc / amount)
-            # 連続販売した場合
-            available_trade_counts.push(asset.coincheck_jpy / (value.coincheck_bid * amount))
-            # zaif
-            # 連続購入した場合
-            available_trade_counts.push(asset.zaif_btc / amount)
-            # 連続販売した場合
-            available_trade_counts.push(asset.zaif_jpy / (value.zaif_bid * amount))
-            # 最終的に一番少ない取引可能回数
-            available_trade_count = available_trade_counts.sort[0]
+            available_trade_count = calcAvailableTradeCount(asset, value, amount)[:count]
             bestAsk = value.coincheck_ask <= value.coincheck_ask ? value.coincheck_ask : value.zaif_ask
             
             # 手数料のパーセンテージ
@@ -303,7 +271,41 @@ module Arbitrage
             puts "adjustFee : " + adjustFee.to_s
             puts "最小取引可能回数 : " + available_trade_count.to_s
             puts "手数料のパーセンテージ : " + adjustFeePer.to_s + "%"
+            puts "１回の取引に必要な利益 ： " + requiredProfit.to_s + "%"
             requiredProfit
+        end
+        
+        # 最少取引可能回数を返す
+        def calcAvailableTradeCount(asset, value, amount)
+             # 最低取引可能回数
+             available_trade_counts = []
+            # coincheck
+            # 連続購入した場合
+            available_trade_counts.push([asset.coincheck_btc / amount, "btc"])
+            # 連続販売した場合
+            available_trade_counts.push([asset.coincheck_jpy / (value.coincheck_bid * amount), "jpy"])
+            # zaif
+            # 連続購入した場合
+            available_trade_counts.push([asset.zaif_btc / amount, "btc"])
+            # 連続販売した場合
+            available_trade_counts.push([asset.zaif_jpy / (value.zaif_bid * amount), "jpy"])
+            # 最終的に一番少ない取引可能回数
+            # available_trade_count = available_trade_counts.sort[0]
+            minTradeCount = 999999
+            needPossibilityAsset = ""
+            available_trade_counts.each do |c|
+                if minTradeCount > c[0]
+                    minTradeCount = c[0]
+                    needPossibilityAsset = c[1]
+                end
+            end
+            
+            # 最少取引可能回数
+            available_trade_count = minTradeCount
+            # 最少取引を行うときに足りなくなる可能性のある資産 jpy or btc
+            need_possibility_asset = needPossibilityAsset
+            
+            return {count: minTradeCount, needAsset: need_possibility_asset}
         end
         
         # amountを考慮して裁定取引利益を計算する
