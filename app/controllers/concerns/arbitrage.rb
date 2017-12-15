@@ -28,6 +28,11 @@ module Arbitrage
             @asset = Asset.last
             @profit;
             @requiredProfitForEachTransaction = nil # １回の取引ごとに必要な利益(%)
+            
+            # 資金移動手数料
+            @coincheckToZaifFee = 886
+            @zaifToCoincheckFee = 1106
+
         end
         
         # 価格情報の更新
@@ -44,10 +49,11 @@ module Arbitrage
             @profit = profitWidthDesignationAmount(coincheckDepth, zaifDepth, @tradeAmount) # 固定数量を使って取引する
             profit = Profit.new(profit: @profit[:profit], amount: @profit[:amount], order: @profit[:order], per1BtcProfit: @profit[:per1BtcProfit])
             profit.save
-        
             value = Value.new(coincheck_bid: coincheckDepth["bids"].first[0], coincheck_ask: coincheckDepth["asks"].first[0], zaif_bid:  zaifDepth["bids"].first[0], zaif_ask: zaifDepth["asks"].first[0])
             value.save
             @value = value
+            # asset, value, adjustFee, amount
+            @requiredProfitForEachTransaction = calcNeedProfit(@asset, @value, @zaifToCoincheckFee, @tradeAmount)
         end
         
         # 資産情報の更新
@@ -268,7 +274,7 @@ module Arbitrage
         # 損失が出ないところを最低ラインとして利率を設定する
         # asset: 資産情報
         # adjustFee: 資産調整ごとに支払う手数料
-        def calcNeedProfit(asset, value, adjustFee, amount)
+        def calcNeedProfit(asset, value, adjustJpyFee, amount)
             # 最低取引可能回数
              available_trade_counts = []
             # coincheck
@@ -287,7 +293,7 @@ module Arbitrage
             
             # 手数料のパーセンテージ
             # BTC送金手数料とJPY送金手数料の高い方を手数料とする
-            adjustFee = adjustFee >= @btcSendFee * bestAsk ? adjustFee : @btcSendFee * bestAsk
+            adjustFee = adjustJpyFee.to_f >= @btcSendFee.to_f * bestAsk.to_f ? adjustJpyFee.to_f : @btcSendFee * bestAsk.to_f
             adjustFeePer = adjustFee / bestAsk * 100
             # １回の取引で必要な利率
             requiredProfit = adjustFeePer / available_trade_count
