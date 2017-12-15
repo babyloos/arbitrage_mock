@@ -23,8 +23,6 @@ module Arbitrage
             @coincheckApi = CoincheckClient.new(ENV["COINCHECK_API_KEY"], ENV["COINCHECK_SECRET_KEY"])
             @zaifApi = API.new(api_key: ENV["ZAIF_API_KEY"], api_secret: ENV["ZAIF_API_SECRET"])
             @value = nil
-            @btcSendFee = 0.0005 # BTC送金手数料(BTC)
-            @tradeAmount = 0.1 # １度に取引する数量(BTC)
             @asset = Asset.last
             @profit;
             @requiredProfitForEachTransaction = nil # １回の取引ごとに必要な利益(%)
@@ -32,6 +30,10 @@ module Arbitrage
             # 資金移動手数料
             @coincheckToZaifFee = 886
             @zaifToCoincheckFee = 1106
+            
+            @jpySendFee = @coincheckToZaifFee >= @zaifToCoincheckFee ? @coincheckToZaifFee : @zaifToCoincheckFee
+            @btcSendFee = 0.0005 # BTC送金手数料(BTC)
+            @tradeAmount = 0.1 # １度に取引する数量(BTC)
 
         end
         
@@ -257,8 +259,22 @@ module Arbitrage
         # adjustFee: 資産調整ごとに支払う手数料
         def calcNeedProfit(asset, value, adjustJpyFee, amount)
             available_trade_count = calcAvailableTradeCount(asset, value, amount)[:count]
-            bestAsk = value.coincheck_ask <= value.coincheck_ask ? value.coincheck_ask : value.zaif_ask
+            need_possibility_asset_type = calcAvailableTradeCount(asset, value, amount)[:needAsset]
             
+            # 取引可能回数が１回を割っていたら資金調整を行う
+            if available_trade_count < 1
+                if need_possibility_asset_type == "jpy"
+                    # JPYを資産調整
+                    adjustAsset_demo(:jpy)
+                    puts "JPYを調整しました。"
+                elsif need_possibility_asset_type == "btc"
+                    # BTCを資産調整
+                    puts "BTCを調整しました。"
+                    adjustAsset_demo(:btc)
+                end
+            end
+            
+            bestAsk = value.coincheck_ask <= value.coincheck_ask ? value.coincheck_ask : value.zaif_ask
             # 手数料のパーセンテージ
             # BTC送金手数料とJPY送金手数料の高い方を手数料とする
             adjustFee = adjustJpyFee.to_f >= @btcSendFee.to_f * bestAsk.to_f ? adjustJpyFee.to_f : @btcSendFee * bestAsk.to_f
