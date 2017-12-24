@@ -23,18 +23,11 @@ module Arbitrage
             @coincheckApi = CoincheckClient.new(ENV["COINCHECK_API_KEY"], ENV["COINCHECK_SECRET_KEY"])
             @zaifApi = API.new(api_key: ENV["ZAIF_API_KEY"], api_secret: ENV["ZAIF_API_SECRET"])
             @value = nil
+            @btcSendFee = 0.0005 # BTC送金手数料(BTC)
+            @tradeAmount = 0.1 # １度に取引する数量(BTC)
             @asset = Asset.last
             @profit;
             @requiredProfitForEachTransaction = nil # １回の取引ごとに必要な利益(%)
-            
-            # 資金移動手数料
-            @coincheckToZaifFee = 886
-            @zaifToCoincheckFee = 1106
-            
-            @jpySendFee = @coincheckToZaifFee >= @zaifToCoincheckFee ? @coincheckToZaifFee : @zaifToCoincheckFee
-            @btcSendFee = 0.0005 # BTC送金手数料(BTC)
-            @tradeAmount = 0.1 # １度に取引する数量(BTC)
-
         end
         
         # 価格情報の更新
@@ -44,6 +37,8 @@ module Arbitrage
             # zaifDepthの取得
             zaifDepth = @zaifApi.get_depth("btc")
             
+            
+            
             # 必要利益を計算する
             
             # 利益計算し取得
@@ -51,11 +46,10 @@ module Arbitrage
             @profit = profitWidthDesignationAmount(coincheckDepth, zaifDepth, @tradeAmount) # 固定数量を使って取引する
             profit = Profit.new(profit: @profit[:profit], amount: @profit[:amount], order: @profit[:order], per1BtcProfit: @profit[:per1BtcProfit])
             profit.save
+        
             value = Value.new(coincheck_bid: coincheckDepth["bids"].first[0], coincheck_ask: coincheckDepth["asks"].first[0], zaif_bid:  zaifDepth["bids"].first[0], zaif_ask: zaifDepth["asks"].first[0])
             value.save
             @value = value
-            # asset, value, adjustFee, amount
-            @requiredProfitForEachTransaction = calcNeedProfit(@asset, @value, @zaifToCoincheckFee, @tradeAmount)
         end
         
         # 資産情報の更新
@@ -182,7 +176,7 @@ module Arbitrage
                     @asset[:zaif_btc] -= amount
                     @asset[:zaif_btc] -= @btcSendFee; # BTC送金コストを引く
                     @asset[:coincheck_btc] += amount;
-                    saveAdjustAssetLog("coincheck", "btc", amount)
+                    saveAdjustAssetLog("coincheck", "btc", amount) 
                 elsif(@asset[:coincheck_btc] > @asset[:zaif_btc])
                     amount = (@asset[:coincheck_btc] - @asset[:zaif_btc]) / 2
                     @asset[:coincheck_btc] -= amount
@@ -209,10 +203,6 @@ module Arbitrage
                     false
                 end
             end
-        end
-        
-        # 資産調整のログ記入
-        def saveAdjustAssetLog(toExchanges, type, amount)
             adjustLog = AdjustLog.new()
             adjustLog.toExchanges = toExchanges
             adjustLog.type = type
@@ -290,9 +280,17 @@ module Arbitrage
             bestAsk = value.coincheck_ask <= value.coincheck_ask ? value.coincheck_ask : value.zaif_ask
             # 手数料のパーセンテージ
             # BTC送金手数料とJPY送金手数料の高い方を手数料とする
-            adjustFee = adjustJpyFee.to_f >= @btcSendFee.to_f * bestAsk.to_f ? adjustJpyFee.to_f : @btcSendFee * bestAsk.to_f
+            # adjustFee = adjustJpyFee.to_f >= @btcSendFee.to_f * bestAsk.to_f ? adjustJpyFee.to_f : @btcSendFee * bestAsk.to_f
+            adjustFee = (@zaifToCoincheckFee + @coincheckToZaifFee) + @btcSendFee.to_f * bestAsk.to_f 
             adjustFeePer = adjustFee / bestAsk * 100
             # １回の取引で必要な利率
+            requiredProfit = adjustFeePer / available_trade_count
+            
+            # debug
+            puts "bestAsk : " + bestAsk.to_s
+            puts "adjustFee : " + adjustFee.to_s
+            puts "最小取引可能回数 : " + available_trade_count.to_s
+            puts "手数料のパーセンテージ : " + adjustFeePer.to_s + "%"
             requiredProfit = adjustFeePer / available_trade_count
             
             # debug
@@ -303,7 +301,6 @@ module Arbitrage
             puts "１回の取引に必要な利益 ： " + requiredProfit.to_s + "%"
             requiredProfit
         end
-        
         # 最少取引可能回数を返す
         def calcAvailableTradeCount(asset, value, amount)
              # 最低取引可能回数
