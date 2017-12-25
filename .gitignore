@@ -17,4 +17,6 @@
 /tmp
 .byebug_history
 
+nohup.out
+
 .c9

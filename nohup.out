@@ -1,0 +1,6 @@
+/home/ubuntu/.rbenv/versions/2.3.1/lib/ruby/2.3.0/rubygems/core_ext/kernel_require.rb:55:in `require': cannot load such file -- ./lib/arbitrage_log (LoadError)
+	from /home/ubuntu/.rbenv/versions/2.3.1/lib/ruby/2.3.0/rubygems/core_ext/kernel_require.rb:55:in `require'
+	from /home/ubuntu/work/arbitrage/arbitrage_mock/loging.rb:1:in `<main>'
+/home/ubuntu/.rbenv/versions/2.3.1/lib/ruby/2.3.0/rubygems/core_ext/kernel_require.rb:55:in `require': cannot load such file -- ./lib/arbitrage_log (LoadError)
+	from /home/ubuntu/.rbenv/versions/2.3.1/lib/ruby/2.3.0/rubygems/core_ext/kernel_require.rb:55:in `require'
+	from /home/ubuntu/work/arbitrage/arbitrage_mock/loging.rb:1:in `<main>'
