@@ -239,7 +239,7 @@ module ArbitrageMock
     		    puts "buy_coincheck JPY資産調整"
     		    adjustAsset("jpy")
     		end
-    		if (@asset[:zaif_btc] - amount - @btcSendFee) < 0
+    		if @asset[:zaif_btc] - amount - @btcSendFee < 0
     		    adjustAsset("btc")
     		end
     		
@@ -265,7 +265,7 @@ module ArbitrageMock
     		end
     		# 手数料をBTC建てとJPY建てで混同している↓
     		# TODO: debug
-    		if @asset[:coincheck_btc] - amount - btcFee < 0
+    		if @asset[:coincheck_btc] - amount - @btcSendFee < 0
     		    puts "buy_zaif BTC資産調整"
     		    adjustAsset("btc")
     		    puts "buy_coincheck BTC資産調整"
