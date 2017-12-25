@@ -59,7 +59,6 @@ module ArbitrageMock
     
         def debug
     		while true do
-    		    # ret = getValue
     		    ret = getDepth
     		    getValue
     		    ret = true
@@ -134,6 +133,10 @@ module ArbitrageMock
     		    writeLog(data)
     		    p data
     		    
+    		    # DBに各情報を保存
+    		    saveValue(@value)
+    		    saveAsset(@asset)
+    		    
     		    sleep(1)
     		end
         end
@@ -157,6 +160,18 @@ module ArbitrageMock
         end
         
         private
+        
+        # 資産情報をDBに保存
+        def saveAsset(asset)
+            a = Asset.new(coincheck_jpy: asset[:coincheck_jpy], coincheck_btc: asset[:coincheck_btc], zaif_jpy: asset[:zaif_jpy], zaif_btc: asset[:zaif_btc])
+            a.save
+        end
+        
+        # 価格情報をDBに保存
+        def saveValue(value)
+            v = Value.new(coincheck_bid: value[:coincheck]["bid"], coincheck_ask: value[:coincheck]["ask"], zaif_bid: value[:zaif]["bid"], zaif_ask: value[:zaif]["ask"])
+            v.save
+        end
     
         # 取引を行う 
         def trade

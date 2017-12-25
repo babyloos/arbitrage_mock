@@ -1,5 +1,5 @@
 class TradeController < ApplicationController
-    include Arbitrage
+    # include Arbitrage
     def home
     end
     
