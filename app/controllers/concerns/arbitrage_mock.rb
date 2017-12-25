@@ -136,6 +136,7 @@ module ArbitrageMock
     		    # DBに各情報を保存
     		    saveValue(@value)
     		    saveAsset(@asset)
+    		    saveProfit
     		    
     		    sleep(1)
     		end
@@ -171,6 +172,13 @@ module ArbitrageMock
         def saveValue(value)
             v = Value.new(coincheck_bid: value[:coincheck]["bid"], coincheck_ask: value[:coincheck]["ask"], zaif_bid: value[:zaif]["bid"], zaif_ask: value[:zaif]["ask"])
             v.save
+        end
+        
+        # 利益情報をDBに保存
+        def saveProfit
+            profit = calcProfit(@minTradeAmount)
+            profit = Profit.new(profit: profit[:profit], amount: profit[:amount], order: profit[:order], per1BtcProfit: calcProfit(1)[:profit])
+            profit.save
         end
     
         # 取引を行う 
