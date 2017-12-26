@@ -85,7 +85,9 @@ module ArbitrageMock
     		        profit1btc: calcProfit(1)[:profit],
     		        profitAmount: profit[:profit],
     		        needProfit1btc: calcNeedProfitAtOneTrade.to_f / @minTradeAmount,
-    		        needProfitAmount: calcNeedProfitAtOneTrade.to_f
+    		        needProfitAmount: calcNeedProfitAtOneTrade.to_f,
+    		        order: profit[:order],
+    		        trade: false
     		    }
     		    
     		    tradeRet = trade
@@ -97,6 +99,7 @@ module ArbitrageMock
     				# puts "現在の利益 : " + tradeRet[:profit].to_s
     				# profit = tradeRet[:profit] * calcOnceTradeAmount(tradeRet[:order])
     				profit = tradeRet[:profit] * @minTradeAmount
+    				tradeInfo[:trade] = true
     		    else
     				puts "取引しませんでした"
     				order = "none"

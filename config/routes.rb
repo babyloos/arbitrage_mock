@@ -2,6 +2,8 @@ Rails.application.routes.draw do
   root 'trade#home'
   get '/ajax', to: 'trade#ajax'
   get '/graph', to: 'trade#graph'
+  get '/history/trade/:offset', to: 'trade#tradeHistory'
+  get '/history/asset/:offset', to: 'trade#assetHistory'
   # The priority is based upon order of creation: first created -> highest priority.
   # See how all your routes lay out with "rake routes".
 

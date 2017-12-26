@@ -3,6 +3,19 @@ class TradeController < ApplicationController
     def home
     end
     
+    # 取引履歴を表示
+    def tradeHistory
+        # 表示する情報を用意
+        offset = params[:offset].to_i
+        
+        # 取引を行っている履歴のみ100件取得
+        @history = TradeInfo.limit(100).order("created_at desc").where("trade = 'true'")
+    end
+    
+    # 資産履歴を表示
+    def assetHistory
+    end
+    
     def graph
         # 資産推移をグラフで表示
         
