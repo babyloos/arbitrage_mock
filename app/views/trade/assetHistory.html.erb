@@ -1,0 +1,21 @@
+<div class="container">
+    <div class="row">
+        <div class="table">
+            <table class="table asset">
+                    <caption>取引履歴</caption>
+                    <thead>
+                        <tr>
+                            <th>id</th><th>コインチェックJPY</th><th>コインチェックBTC</th><th>ザイフJPY</th><th>ザイフBTC</th><th>取引日時</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% @history.each do |h|%>
+                            <tr>
+                                <td><%= h.id %></td><td><%= h.coincheck_jpy %></td><td><%= h.coincheck_btc %></td><td><%= h.zaif_jpy %></td><td><%= h.zaif_btc %></td><td><%= h.created_at.strftime('%Y-%m-%d- %H:%M:%S') %></td>
+                            </tr>
+                        <% end %>
+                    </tbody>
+            </table>
+        </div>
+    </div>
+</div>
