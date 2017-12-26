@@ -32,10 +32,10 @@
                     </thead>
                     <tbody>
                             <tr>
-                                <th>BID</th><td class="coincheck_bid"></td><td class="zaif_bid"></td>
+                                <th>best BID</th><td class="coincheck_bid"></td><td class="zaif_bid"></td>
                             </tr>
                             <tr>
-                                <th>ASK</th><td class="coincheck_ask"></td><td class="zaif_ask"></td>
+                                <th>best ASK</th><td class="coincheck_ask"></td><td class="zaif_ask"></td>
                             </tr>
                     </tbody>
             </table>
@@ -61,7 +61,7 @@
         </div>
     </div>
     <!-- 取引情報 -->
-    <div class="row">
+    <div class="row col-md-4">
         <div class="table">
             <table class="table info">
                 <caption>取引情報</caption>
@@ -117,6 +117,7 @@
             var coincheck_asset = data.coincheck_asset
             var zaif_asset = data.zaif_asset
             var total_asset = data.total_asset
+            var trade_info = data.trade_info
             
             // 資産
             $(".asset .coincheck_jpy").text(Math.round(asset.coincheck_jpy));
@@ -140,18 +141,27 @@
             $(".value .zaif_ask").text(value.zaif_ask);
             
             // 利益
-            $(".profit .real .buy_coincheck").text("")
-            $(".profit .ideal .buy_coincheck").text("")
-            $(".profit .real .buy_zaif").text("")
-            $(".profit .ideal .buy_zaif").text("")
+            $(".profit .real .buy_coincheck").text("");
+            $(".profit .ideal .buy_coincheck").text("");
+            $(".profit .real .buy_zaif").text("");
+            $(".profit .ideal .buy_zaif").text("");
             if(profit.order === "buy_coincheck") {
-                $(".profit .real .buy_coincheck").text(profit.profit)
-                $(".profit .ideal .buy_coincheck").text(profit.per1BtcProfit)
+                $(".profit .real .buy_coincheck").text(profit.profit);
+                $(".profit .ideal .buy_coincheck").text(profit.per1BtcProfit);
             } else if(profit.order === "buy_zaif") {
-                $(".profit .real .buy_zaif").text(profit.profit)
-                $(".profit .ideal .buy_zaif").text(profit.per1BtcProfit)
+                $(".profit .real .buy_zaif").text(profit.profit);
+                $(".profit .ideal .buy_zaif").text(profit.per1BtcProfit);
             }
-            $(".profit .real .amount").text(profit.amount)
+            $(".profit .real .amount").text(profit.amount);
+            
+            // 取引情報
+            console.log(trade_info);
+            $(".info .trade_amount").text(trade_info.amount);
+            $(".info .trade_count").text(trade_info.count);
+            $(".info .profit_per_1btc").text(trade_info.profit1btc);
+            $(".info .profit_per_amount").text(trade_info.profitAmount);
+            $(".info .need_profit_per_1btc").text(trade_info.needProfit1btc);
+            $(".info .need_profit_per_amount").text(trade_info.needProfitAmount);
             
         })
         // 検索失敗時には、その旨をダイアログ表示

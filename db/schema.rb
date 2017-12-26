@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20171215045206) do
+ActiveRecord::Schema.define(version: 20171225104825) do
 
   create_table "adjust_logs", force: :cascade do |t|
     t.string   "toExchanges"
@@ -55,6 +55,17 @@ ActiveRecord::Schema.define(version: 20171215045206) do
     t.float    "per1BtcProfit"
     t.datetime "created_at",    null: false
     t.datetime "updated_at",    null: false
+  end
+
+  create_table "trade_infos", force: :cascade do |t|
+    t.float    "amount"
+    t.float    "count"
+    t.float    "profit1btc"
+    t.float    "profitAmount"
+    t.float    "needProfit1btc"
+    t.float    "needProfitAmount"
+    t.datetime "created_at",       null: false
+    t.datetime "updated_at",       null: false
   end
 
   create_table "values", force: :cascade do |t|

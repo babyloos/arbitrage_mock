@@ -73,6 +73,8 @@ class TradeController < ApplicationController
         value = Value.last
         profit = Profit.last
         
+        tradeInfo = TradeInfo.last
+        
         # coincheck総資産
         coincheck_asset = asset.coincheck_jpy + (asset.coincheck_btc * value.coincheck_bid)
         # zaif総資産
@@ -86,7 +88,8 @@ class TradeController < ApplicationController
             "profit": profit,
             "coincheck_asset": coincheck_asset,
             "zaif_asset": zaif_asset,
-            "total_asset": total_asset
+            "total_asset": total_asset,
+            "trade_info": tradeInfo
         ]
         render :json => @data
     end

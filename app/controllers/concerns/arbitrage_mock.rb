@@ -79,6 +79,15 @@ module ArbitrageMock
     		    printf("１取引あたりの必要利益 : %f\n", calcNeedProfitAtOneTrade.to_f)
     		    printf("現在の数量での利益(%sで購入) : %f\n", profit[:order], profit[:profit])
     		    
+    		    tradeInfo = {
+    		        amount: @minTradeAmount,
+    		        count: @tradeCount,
+    		        profit1btc: calcProfit(1)[:profit],
+    		        profitAmount: profit[:profit],
+    		        needProfit1btc: calcNeedProfitAtOneTrade.to_f / @minTradeAmount,
+    		        needProfitAmount: calcNeedProfitAtOneTrade.to_f
+    		    }
+    		    
     		    tradeRet = trade
     		    if tradeRet
     				puts "取引しました"
@@ -137,6 +146,7 @@ module ArbitrageMock
     		    saveValue(@value)
     		    saveAsset(@asset)
     		    saveProfit
+    		    saveInfo(tradeInfo)
     		    
     		    sleep(1)
     		end
@@ -177,8 +187,14 @@ module ArbitrageMock
         # 利益情報をDBに保存
         def saveProfit
             profit = calcProfit(@minTradeAmount)
-            profit = Profit.new(profit: profit[:profit], amount: profit[:amount], order: profit[:order], per1BtcProfit: calcProfit(1)[:profit])
+            profit = Profit.new(profit: profit[:profit], amount: @minTradeAmount, order: profit[:order], per1BtcProfit: calcProfit(1)[:profit])
             profit.save
+        end
+        
+        # 取引情報をDBに保存
+        def saveInfo(info)
+            i = TradeInfo.new(info)
+            i.save
         end
     
         # 取引を行う 
@@ -233,9 +249,9 @@ module ArbitrageMock
     		jpyAdjustFee = calcJpySendFee("coincheck")
     		btcFee = calcBtcSendFee
     		# 購入金額計算
-    		coincheck_buy_sum_value = calcTradeValueSum(@depth[:coincheck], amount)
+    		coincheck_sum_value = calcTradeValueSum(@depth[:coincheck], amount)
     		# if (@asset[:coincheck_jpy] - (@value[:coincheck]["ask"] * amount - jpyAdjustFee)) < 0
-    		if (@asset[:coincheck_jpy] - (coincheck_buy_sum_value[:buy] - jpyAdjustFee)) < 0
+    		if (@asset[:coincheck_jpy] - (coincheck_sum_value[:buy] - jpyAdjustFee)) < 0
     		    puts "buy_coincheck JPY資産調整"
     		    adjustAsset("jpy")
     		end
@@ -244,11 +260,11 @@ module ArbitrageMock
     		end
     		
     		# @asset[:coincheck_jpy] -= @value[:coincheck]["ask"] * amount
-    		@asset[:coincheck_jpy] -= coincheck_buy_sum_value[:buy]
+    		@asset[:coincheck_jpy] -= coincheck_sum_value[:buy]
     		@asset[:coincheck_btc] += amount
-    		zaif_sell_sum_value = calcTradeValueSum(@depth[:zaif], amount)
+    		zaif_sum_value = calcTradeValueSum(@depth[:zaif], amount)
     		# @asset[:zaif_jpy] += @value[:zaif]["bid"] * amount
-    		@asset[:zaif_jpy] += zaif_sell_sum_value[:sell]
+    		@asset[:zaif_jpy] += zaif_sum_value[:sell]
     		@asset[:zaif_btc] -= amount
         end
     
@@ -257,9 +273,9 @@ module ArbitrageMock
     		# 資産が足りなければ資産調整を行う
     		jpyAdjustFee = calcJpySendFee("zaif")
     		btcFee = calcBtcSendFee
-    		zaif_buy_sum_value = calcTradeValueSum(@depth[:zaif], amount)
+    		zaif_sum_value = calcTradeValueSum(@depth[:zaif], amount)
     		# if (@asset[:zaif_jpy] - (@value[:zaif]["ask"] * amount - jpyAdjustFee)) < 0
-    		if (@asset[:zaif_jpy] - (zaif_buy_sum_value[:buy] - jpyAdjustFee)) < 0
+    		if (@asset[:zaif_jpy] - (zaif_sum_value[:buy] - jpyAdjustFee)) < 0
     		    puts "buy_zaif JPY資産調整"
     		    adjustAsset("jpy")
     		end
@@ -274,11 +290,11 @@ module ArbitrageMock
     		end
     	
     		# @asset[:zaif_jpy] -= @value[:zaif]["ask"] * amount
-    		@asset[:zaif_jpy] -= zaif_buy_sum_value
+    		@asset[:zaif_jpy] -= zaif_sum_value[:buy]
     		@asset[:zaif_btc] += amount
-    		coincheck_sell_sum_value = calcTradeValueSum(@depth[:coincheck], amount)
+    		coincheck_sum_value = calcTradeValueSum(@depth[:coincheck], amount)
     		# @asset[:coincheck_jpy] += @value[:coincheck]["bid"] * amount
-    		@asset[:coincheck_jpy] += coincheck_sell_sum_value[:sell]
+    		@asset[:coincheck_jpy] += coincheck_sum_value[:sell]
     		@asset[:coincheck_btc] -= amount
         end
     
