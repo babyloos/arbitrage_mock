@@ -1,0 +1,21 @@
+<div class="container">
+    <div class="row">
+        <div class="table">
+            <table class="table asset">
+                    <caption>取引履歴</caption>
+                    <thead>
+                        <tr>
+                            <th>id</th><th>オーダー内容</th><th>1BTCあたりの差額</th><th>取引量あたりの差額</th><th>取引日時</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% @history.each do |h|%>
+                            <tr>
+                                <td><%= h.id %></td><td><%= h.order %></td><td><%= h.profit1btc %></td><td><%= h.profitAmount %></td><td><%= h.created_at.strftime('%Y-%m-%d- %H:%M:%S') %></td>
+                            </tr>
+                        <% end %>
+                    </tbody>
+            </table>
+        </div>
+    </div>
+</div>

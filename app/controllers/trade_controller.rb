@@ -9,7 +9,7 @@ class TradeController < ApplicationController
         offset = params[:offset].to_i
         
         # 取引を行っている履歴のみ100件取得
-        @history = TradeInfo.limit(100).order("created_at desc").where("trade = 'true'")
+        @history = TradeInfo.offset(offset).order("created_at desc").limit(100).where(trade: true)
     end
     
     # 資産履歴を表示
