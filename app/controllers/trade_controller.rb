@@ -5,15 +5,15 @@ class TradeController < ApplicationController
     
     # 取引履歴を表示
     def tradeHistory
-        # 表示する情報を用意
         offset = params[:offset].to_i
-        
-        # 取引を行っている履歴のみ100件取得
         @history = TradeInfo.offset(offset).order("created_at desc").limit(100).where(trade: true)
     end
     
     # 資産履歴を表示
     def assetHistory
+        offset = params[:offset].to_i
+        @history = Asset.offset(offset).order("created_at desc").limit(100)
+        
     end
     
     def graph

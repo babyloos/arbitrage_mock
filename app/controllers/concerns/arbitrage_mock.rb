@@ -177,8 +177,12 @@ module ArbitrageMock
         
         # 資産情報をDBに保存
         def saveAsset(asset)
-            a = Asset.new(coincheck_jpy: asset[:coincheck_jpy], coincheck_btc: asset[:coincheck_btc], zaif_jpy: asset[:zaif_jpy], zaif_btc: asset[:zaif_btc])
-            a.save
+            # 内容が変更されている場合のみ更新する
+            lastAsset = Asset.last
+            if lastAsset.coincheck_jpy != asset[:coincheck_jpy] || lastAsset.coincheck_btc != asset[:coincheck_btc] || lastAsset.zaif_jpy != asset[:zaif_jpy] || lastAsset.zaif_btc != asset[:zaif_btc]
+                a = Asset.new(coincheck_jpy: asset[:coincheck_jpy], coincheck_btc: asset[:coincheck_btc], zaif_jpy: asset[:zaif_jpy], zaif_btc: asset[:zaif_btc])
+                a.save
+            end
         end
         
         # 価格情報をDBに保存
