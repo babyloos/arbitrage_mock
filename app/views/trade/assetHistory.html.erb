@@ -5,13 +5,13 @@
                     <caption>資産履歴</caption>
                     <thead>
                         <tr>
-                            <th>id</th><th>コインチェックJPY</th><th>コインチェックBTC</th><th>ザイフJPY</th><th>ザイフBTC</th><th>更新日時</th>
+                            <th>id</th><th>合計JPY</th><th>合計BTC</th><th>コインチェックJPY</th><th>コインチェックBTC</th><th>ザイフJPY</th><th>ザイフBTC</th><th>更新日時</th>
                         </tr>
                     </thead>
                     <tbody>
                         <% @history.each do |h|%>
                             <tr>
-                                <td><%= h.id %></td><td><%= h.coincheck_jpy %></td><td><%= h.coincheck_btc %></td><td><%= h.zaif_jpy %></td><td><%= h.zaif_btc %></td><td><%= h.created_at.strftime('%Y-%m-%d- %H:%M:%S') %></td>
+                                <td><%= h.id %></td><td><%= h.total_jpy %></td><td><%= h.total_btc %></td><td><%= h.coincheck_jpy %></td><td><%= h.coincheck_btc %></td><td><%= h.zaif_jpy %></td><td><%= h.zaif_btc %></td><td><%= h.created_at.strftime('%Y-%m-%d- %H:%M:%S') %></td>
                             </tr>
                         <% end %>
                     </tbody>
