@@ -29,6 +29,9 @@ module ArbitrageMock
     	    @coincheckJpyToZaifFee = 886.0
     	    @zaifJpyToCoincheckFee = 1106.0
     		@btcSendFee = 0.0005
+    		
+    		# 資産調整時点のJPY総額
+    		@adjustSumJpyAmount = @initSumJpyAmount
     	
     		# debug
     		# @coincheckJpyToZaifFee = 0.0
@@ -91,6 +94,8 @@ module ArbitrageMock
     		    }
     		    
     		    tradeRet = trade
+    		    # 資産調整を確認
+    		    checkAvailableAdjustAsset
     		    if tradeRet
     				puts "取引しました"
     				order = tradeRet[:order]
@@ -306,25 +311,6 @@ module ArbitrageMock
     		@asset[:zaif_btc] -= amount
         end
     
-        # ザイフで買ってコインチェックで売る
-        def buy_zaif(amount)
-    		# 資産が足りなければ資産調整を行う
-    		jpyAdjustFee = calcJpySendFee("zaif")
-    		btcFee = calcBtcSendFee
-    		zaif_sum_value = calcTradeValueSum(@depth[:zaif], amount)
-    		
-    		if @asset[:coincheck_btc] - amount - @btcSendFee < 0
-    		    puts "buy_zaif BTC資産調整"
-    	
-    		# @asset[:zaif_jpy] -= @value[:zaif]["ask"] * amount
-    		@asset[:zaif_jpy] -= zaif_sum_value[:buy]
-    		@asset[:zaif_btc] += amount
-    		coincheck_sum_value = calcTradeValueSum(@depth[:coincheck], amount)
-    		# @asset[:coincheck_jpy] += @value[:coincheck]["bid"] * amount
-    		@asset[:coincheck_jpy] += coincheck_sum_value[:sell]
-    		@asset[:coincheck_btc] -= amount
-        end
-    
         # １回の取引に必要な１ビットコインあたりの利益計算
         def calcNeedProfitAtOneTrade
     		calcTotalFee / @tradeCount
@@ -385,18 +371,6 @@ module ArbitrageMock
         	{order: profit[:order], profit: profit[:profit]}
         end
         
-        # 板情報取得
-        def getDepth
-        	begin
-    		    # bitflyerTicker = @bitflyer.ticker
-    		    coincheckDepth = @coincheck.depth
-    		    # btcboxTicker = @btcbox.ticker
-    		    zaifDepth = @zaif.depth
-    		rescue Kaesen::Market::ConnectionFailedException => e
-    		   puts e.message
-    		   return false
-        end
-        
         # 板情報を考慮した裁定利益計算
         # amount: 取引数量
         def calcProfit(amount)
@@ -417,6 +391,7 @@ module ArbitrageMock
     		rescue Net::OpenTimeout => e
     		    puts e.message
     		    return false;
+    		end
     		
     		@depth = {coincheck: coincheckDepth, zaif: zaifDepth}
     	end
