@@ -33,23 +33,10 @@ module ArbitrageMock
     		# 資産調整時点のJPY総額
     		@adjustSumJpyAmount = @initSumJpyAmount
     	
-    		# debug
-    		# @coincheckJpyToZaifFee = 0.0
-    	        # @zaifJpyToCoincheckFee = 0.0
-    		# @btcSendFee = 0.0
-    	
     		# 最小取引可能数量
     		@minTradeAmount = 0.005
     	
-    		# 資産調整ごとの最小取引可能回数
-    		# @tradeCount = 10.0 # 取引回数は変動性
-    	
-    		# ビットコインの価格の想定最高値
-    		# ここまでなら価格が上がっても損はしない
-    		# @maxBtcValue = 2300000.0
-    	
     		@asset = asset
-    		# @value = {coincheck: {"bid"=>1900000, "ask"=>1910000}, zaif: {"bid"=>1932000, "ask"=>1923000}} # コインチェックのほうが安い
     	
     		# csvログ用
     		@csvFile = CSV.open("arbitrage_log.csv", 'w')
@@ -257,11 +244,9 @@ module ArbitrageMock
         # amount: 0.05
         def buy_btc(exchanges, amount)
     		if exchanges == "coincheck"
-    		    # @asset[:coincheck_jpy] -= @value[:coincheck]["ask"] * amount
     		    @asset[:coincheck_jpy] -= calcTradeValueSum(@depth[:coincheck], amount)[:buy]
     		    @asset[:coincheck_btc] += amount
     		elsif exchanges == "zaif"
-    		    # @asset[:zaif_jpy] -= @value[:zaif]["ask"] * amount
     		    @asset[:zaif_jpy] -= calcTradeValueSum(@depth[:zaif], amount)[:buy]
     		    @asset[:zaif_btc] += amount
     		end
@@ -269,46 +254,30 @@ module ArbitrageMock
     
         # コインチェックで買ってザイフで売る
         def buy_coincheck(amount)
-    
-    		puts "コインチェックで買う"
-    	
-    		# 資産が足りなければ資産調整を行う
-    		# 資産調整をしても最小取引量を下回ってしまう場合は停止する :TODO
     		jpyAdjustFee = calcJpySendFee("coincheck")
     		btcFee = calcBtcSendFee
-    		# 購入金額計算
-    		coincheck_sum_value = calcTradeValueSum(@depth[:coincheck], amount)
-    		# if (@asset[:coincheck_jpy] - (@value[:coincheck]["ask"] * amount - jpyAdjustFee)) < 0
-    # 		if (@asset[:coincheck_jpy] - (coincheck_sum_value[:buy] - jpyAdjustFee)) < 0
-    # 		    puts "buy_coincheck JPY資産調整"
-    # 		    adjustAsset("jpy")
-    # 		end
-    # 		if @asset[:zaif_btc] - amount - @btcSendFee < 0
-    # 		    adjustAsset("btc")
-    # 		end
     		
-    		# @asset[:coincheck_jpy] -= @value[:coincheck]["ask"] * amount
+    		coincheck_sum_value = calcTradeValueSum(@depth[:coincheck], amount)
     		@asset[:coincheck_jpy] -= coincheck_sum_value[:buy]
     		@asset[:coincheck_btc] += amount
     		zaif_sum_value = calcTradeValueSum(@depth[:zaif], amount)
-    		# @asset[:zaif_jpy] += @value[:zaif]["bid"] * amount
+
     		@asset[:zaif_jpy] += zaif_sum_value[:sell]
     		@asset[:zaif_btc] -= amount
         end
     
         # ザイフで買ってコインチェックで売る
         def buy_zaif(amount)
-    		# 資産が足りなければ資産調整を行う
     		jpyAdjustFee = calcJpySendFee("zaif")
     		btcFee = calcBtcSendFee
+    		
     		zaif_sum_value = calcTradeValueSum(@depth[:zaif], amount)
-
-    		@asset[:coincheck_jpy] -= coincheck_sum_value[:buy]
-    		@asset[:coincheck_btc] += amount
-    		zaif_sum_value = calcTradeValueSum(@depth[:zaif], amount)
-    		# @asset[:zaif_jpy] += @value[:zaif]["bid"] * amount
-    		@asset[:zaif_jpy] += zaif_sum_value[:sell]
-    		@asset[:zaif_btc] -= amount
+    		@asset[:zaif_jpy] -= zaif_sum_value[:buy]
+    		@asset[:zaif_btc] += amount
+    		
+    		coincheck_sum_value = calcTradeValueSum(@depth[:coincheck], amount)
+    		@asset[:coincheck_jpy] += coincheck_sum_value[:sell]
+    		@asset[:coincheck_btc] -= amount
         end
     
         # １回の取引に必要な１ビットコインあたりの利益計算

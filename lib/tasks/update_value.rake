@@ -4,9 +4,10 @@ namespace :update_value do
     
     task :update => :environment do
         include ArbitrageMock
-        jpy = 1000000
-        btc = 1600000 / jpy
-        asset = {coincheck_jpy: jpy, coincheck_btc: btc, zaif_jpy: jpy, zaif_btc: btc}
+        # jpy = 1000000
+        # btc = 1600000 / jpy
+        # asset = {coincheck_jpy: jpy, coincheck_btc: btc, zaif_jpy: jpy, zaif_btc: btc}
+        asset = Asset.last
         d = ArbitrageMock::ArbitrageMock.new(asset)
         d.debug
     end
