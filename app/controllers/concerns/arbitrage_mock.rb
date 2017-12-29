@@ -287,30 +287,30 @@ module ArbitrageMock
     
         # １回に取引する量を計算する
         # order: "buy_coincheck" or "buy_zaif"
-        def calcOnceTradeAmount(order)
-    		# 最小取引数量を考慮
-    		# 0.005
-    		if order == "buy_coincheck"
-    		    availableTradeAmount = [@asset[:coincheck_jpy] / @value[:coincheck]["bid"] / @tradeCount, @asset[:zaif_btc] / @tradeCount].min
-    		    if availableTradeAmount < @minTradeAmount
-    				puts "取引出来る数量が下限(0.005BTC)を下回りました。" + availableTradeAmount.to_s
-    				# debug
-    				@minTradeAmount
-    		    else
-    				availableTradeAmount
-    		    end
-    		elsif order == "buy_zaif"
-    		    availableTradeAmount = [@asset[:zaif_jpy] / @value[:zaif]["bid"] / @tradeCount, @asset[:coincheck_btc] / @tradeCount].min
-    		    if availableTradeAmount < @minTradeAmount
-    				puts "取引出来る数量が下限(0.005BTC)を下回りました。" + availableTradeAmount.to_s
-    				# puts "取引出来る数量が下限(0.005BTC)を下回りました。"
-    				# debug
-    				@minTradeAmount
-    		    else
-    				availableTradeAmount
-    		    end
-    		end
-        end
+    #     def calcOnceTradeAmount(order)
+    # 		# 最小取引数量を考慮
+    # 		# 0.005
+    # 		if order == "buy_coincheck"
+    # 		    availableTradeAmount = [@asset[:coincheck_jpy] / @value[:coincheck]["bid"] / @tradeCount, @asset[:zaif_btc] / @tradeCount].min
+    # 		    if availableTradeAmount < @minTradeAmount
+    # 				puts "取引出来る数量が下限(0.005BTC)を下回りました。" + availableTradeAmount.to_s
+    # 				# debug
+    # 				@minTradeAmount
+    # 		    else
+    # 				availableTradeAmount
+    # 		    end
+    # 		elsif order == "buy_zaif"
+    # 		    availableTradeAmount = [@asset[:zaif_jpy] / @value[:zaif]["bid"] / @tradeCount, @asset[:coincheck_btc] / @tradeCount].min
+    # 		    if availableTradeAmount < @minTradeAmount
+    # 				puts "取引出来る数量が下限(0.005BTC)を下回りました。" + availableTradeAmount.to_s
+    # 				# puts "取引出来る数量が下限(0.005BTC)を下回りました。"
+    # 				# debug
+    # 				@minTradeAmount
+    # 		    else
+    # 				availableTradeAmount
+    # 		    end
+    # 		end
+    #     end
         
         # 何回取引出来るかを計算する
         def calcTradeCount
