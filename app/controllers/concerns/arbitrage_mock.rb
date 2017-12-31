@@ -28,7 +28,10 @@ module ArbitrageMock
     	
     	    @coincheckJpyToZaifFee = 886.0
     	    @zaifJpyToCoincheckFee = 1106.0
-    		@btcSendFee = 0.0005
+    # 		@btcSendFee = 0.0005
+    		@coincheckBtcToZaifFee = 0.001
+    		@zaifBtcToCoincheckFee = 0.0001
+    		
     		
     		# 資産調整時点のJPY総額
     		@adjustSumJpyAmount = @initSumJpyAmount
@@ -401,7 +404,7 @@ module ArbitrageMock
     		if type == "btc"	
     		    if @asset[:coincheck_btc] < @asset[:zaif_btc]
     				amount = (@asset[:zaif_btc] - @asset[:coincheck_btc]) / 2
-    				@asset[:zaif_btc] -= amount + @btcSendFee
+    				@asset[:zaif_btc] -= amount + @zaifBtcToCoincheckFee
     				@asset[:coincheck_btc] += amount
     	
     				# BTCを補充する
@@ -409,7 +412,7 @@ module ArbitrageMock
     				replenBtc(replenAmount)
     		    elsif @asset[:coincheck_btc] > @asset[:zaif_btc]
     				amount = (@asset[:coincheck_btc] - @asset[:zaif_btc]) / 2
-    				@asset[:coincheck_btc] -= amount + @btcSendFee
+    				@asset[:coincheck_btc] -= amount + @coincheckBtcToZaifFee
     				@asset[:zaif_btc] += amount
     	
     		    	# BTCを補充する
@@ -454,8 +457,9 @@ module ArbitrageMock
         end
     
         # 現在のビットコイン送金手数料算出
+        # 高いほうの手数料を考慮
         def calcBtcSendFee
-        	btcFee = @btcSendFee
+        	btcFee = @coincheckBtcToZaifFee > @zaifBtcToCoincheckFee ? @coincheckBtcToZaifFee : @zaifBtcToCoincheckFee
     		jpyFee = getBestAsk * btcFee
     		jpyFee
         end
