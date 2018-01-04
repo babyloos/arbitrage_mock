@@ -1,0 +1,8 @@
+<h3>設定</h3>
+<%= bootstrap_form_for @asset, :url => {:aciton => :reset} do |f| %>
+  <%= f.number_field :coincheck_jpy, value: 1000000 %>
+  <%= f.number_field :coincheck_btc, value: 0.5, step: "0.001" %>
+  <%= f.number_field :zaif_jpy, value: 1000000 %>
+  <%= f.number_field :zaif_btc, value: 0.5, step: "0.001" %>
+  <%= f.submit("更新") %>
+<% end %>

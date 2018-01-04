@@ -26,11 +26,11 @@ gem 'sdoc', '~> 0.4.0', group: :doc
 gem 'ruby_coincheck_client'
 # gem 'zaif4ruby', github: "techbureau/zaif-ruby"
 gem 'zaif', '~> 0.0.2'
-
 # kaesen
 gem 'kaesen', '~> 0.2.1'
-
 gem 'jquery-turbolinks'
+gem 'bootstrap_form'
+
 
 # Use ActiveModel has_secure_password
 # gem 'bcrypt', '~> 3.1.7'

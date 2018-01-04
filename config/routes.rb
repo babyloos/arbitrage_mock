@@ -4,7 +4,9 @@ Rails.application.routes.draw do
   get '/graph/:offset', to: 'trade#graph'
   get '/history/trade/:offset', to: 'trade#tradeHistory'
   get '/history/asset/:offset', to: 'trade#assetHistory'
-  post '/', to: 'trade#reset'
+  get '/config', to: 'config#home'
+  post '/config', to: 'config#reset'
+  # resources :config
   # The priority is based upon order of creation: first created -> highest priority.
   # See how all your routes lay out with "rake routes".
 
