@@ -13,7 +13,6 @@ class TradeController < ApplicationController
     def assetHistory
         offset = params[:offset].to_i
         @history = Asset.offset(offset).order("created_at desc").limit(100).select("id, coincheck_jpy, coincheck_btc, zaif_jpy, zaif_btc, (coincheck_jpy + zaif_jpy) as total_jpy, (coincheck_btc + zaif_btc) as total_btc, created_at")
-        
     end
     
     def graph
@@ -108,7 +107,8 @@ class TradeController < ApplicationController
             "coincheck_asset": coincheck_asset,
             "zaif_asset": zaif_asset,
             "total_asset": total_asset,
-            "trade_info": tradeInfo
+            "trade_info": tradeInfo,
+            "init_asset": init_asset,
         ]
         render :json => @data
     end

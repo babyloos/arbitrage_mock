@@ -21,7 +21,21 @@
                     </tbody>
             </table>
         </div>
-        
+        <div class="table">
+            <table class="table total_profit">
+                <caption>初期資産からの差額</caption>
+                <thead>
+                    <tr>
+                        <th></th><th>初期資産</th><th>現在資産との差額</th><th>資産初期化日時</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class="jpy">
+                        <th>JPY</th><td class="init"></td><td class="profit"></td><td class="date"></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
         <div class="table">
             <table class="table value">
                     <caption>現在価格</caption>
@@ -61,33 +75,56 @@
         </div>
     </div>
     <!-- 取引情報 -->
-    <div class="row col-md-4">
-        <div class="table">
-            <table class="table info">
-                <caption>取引情報</caption>
-                <thead>
-                </thead>
-                <tbody>
-                    <tr>
-                        <th>現在の取引量</th><td class="trade_amount"></td>
-                    </tr>
-                    <tr>
-                        <th>取引可能回数</th><td class="trade_count"></td>
-                    </tr>
-                    <tr>
-                        <th>1BTCあたりの差額</th><td class="profit_per_1btc"></td>
-                    </tr>
-                    <tr>
-                        <th>取引量あたりの差額</th><td class="profit_per_amount"></td>
-                    </tr>
-                    <tr>
-                        <th>1BTCあたりの必要差額</th><td class="need_profit_per_1btc"></td>
-                    </tr>
-                    <tr>
-                        <th>取引量あたりの必要差額</th><td class="need_profit_per_amount"></td>
-                    </tr>
-                </tbody>
-            </table>
+    <div class="row">
+        <div class="col-md-6">
+            <div class="table">
+                <table class="table info">
+                    <caption>取引情報</caption>
+                    <thead>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <th>現在の取引量</th><td class="trade_amount"></td>
+                        </tr>
+                        <tr>
+                            <th>取引可能回数</th><td class="trade_count"></td>
+                        </tr>
+                        <tr>
+                            <th>1BTCあたりの差額</th><td class="profit_per_1btc"></td>
+                        </tr>
+                        <tr>
+                            <th>取引量あたりの差額</th><td class="profit_per_amount"></td>
+                        </tr>
+                        <tr>
+                            <th>1BTCあたりの必要差額</th><td class="need_profit_per_1btc"></td>
+                        </tr>
+                        <tr>
+                            <th>取引量あたりの必要差額</th><td class="need_profit_per_amount"></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <!-- 手数料情報 -->
+        <div class="col-md-6">
+            <div class="table fee_info">
+                <table class="table">
+                    <caption>手数料情報<caption>
+                    <thead>
+                        <tr>
+                            <th></th><th>coincheckからzaif</th><th>zaifからcoincheck</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <th>JPY移動手数料</th><td>886円</td><td>1106円</td>
+                        </tr>
+                        <tr>
+                            <th>BTC移動手数料</th><td>0.001BTC</td><td>0.0001BTC</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 </div>
@@ -163,6 +200,14 @@
             $(".info .need_profit_per_1btc").text(trade_info.needProfit1btc);
             $(".info .need_profit_per_amount").text(trade_info.needProfitAmount);
             
+            // 利益総額
+            var profit = (parseFloat(asset.coincheck_jpy) + parseFloat(asset.zaif_jpy)) - (parseFloat(init_asset.coincheck_jpy) + parseFloat(init_asset.zaif_jpy))
+            var msec = new Date.parse(init_asset.created_at);
+            var init_date = new Date(msec)
+            $(".total_profit .jpy .profit").text(profit);
+            $(".total_profit .jpy .init").text(parseFloat(init_asset.coincheck_jpy) + parseFloat(init_asset.zaif_jpy));
+            $(".total_profit .jpy .date").text(init_asset.created_at);
+
         })
         // 検索失敗時には、その旨をダイアログ表示
         .fail(function() {
