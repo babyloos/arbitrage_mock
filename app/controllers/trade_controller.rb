@@ -100,6 +100,9 @@ class TradeController < ApplicationController
         # 総資産
         total_asset = coincheck_asset + zaif_asset
         
+        # 資産リセットからの総利益
+        init_asset = Asset.reset_info
+        
         @data = [
             "asset": asset,
             "value": value,
@@ -107,7 +110,8 @@ class TradeController < ApplicationController
             "coincheck_asset": coincheck_asset,
             "zaif_asset": zaif_asset,
             "total_asset": total_asset,
-            "trade_info": tradeInfo
+            "trade_info": tradeInfo,
+            "init_asset": init_asset,
         ]
         render :json => @data
     end

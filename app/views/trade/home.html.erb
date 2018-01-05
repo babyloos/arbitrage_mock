@@ -21,7 +21,21 @@
                     </tbody>
             </table>
         </div>
-        
+        <div class="table">
+            <table class="table total_profit">
+                <caption>初期資産からの差額</caption>
+                <thead>
+                    <tr>
+                        <th></th><th>初期資産</th><th>現在資産との差額</th><th>資産初期化日時</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class="jpy">
+                        <th>JPY</th><td class="init"></td><td class="profit"></td><td class="date"></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
         <div class="table">
             <table class="table value">
                     <caption>現在価格</caption>
@@ -141,6 +155,7 @@
             var zaif_asset = data.zaif_asset
             var total_asset = data.total_asset
             var trade_info = data.trade_info
+            var init_asset = data.init_asset
             
             // 資産
             $(".asset .coincheck_jpy").text(Math.round(asset.coincheck_jpy));
@@ -185,6 +200,16 @@
             $(".info .profit_per_amount").text(trade_info.profitAmount);
             $(".info .need_profit_per_1btc").text(trade_info.needProfit1btc);
             $(".info .need_profit_per_amount").text(trade_info.needProfitAmount);
+            
+            // 利益総額
+            var profit = (parseFloat(asset.coincheck_jpy) + parseFloat(asset.zaif_jpy)) - (parseFloat(init_asset.coincheck_jpy) + parseFloat(init_asset.zaif_jpy))
+            var msec = new Date.parse(init_asset.created_at);
+            var init_date = new Date(msec)
+            $(".total_profit .jpy .profit").text(profit);
+            // $(".total_profit .btc .profit").text();
+            $(".total_profit .jpy .init").text(parseFloat(init_asset.coincheck_jpy) + parseFloat(init_asset.zaif_jpy));
+            $(".total_profit .jpy .date").text(init_asset.created_at);
+            // $(".total_profit .btc .init").text(parseFloat(init_asset.coincheck_btc) + parseFloat(init_asset.zaif_btc));
             
         })
         // 検索失敗時には、その旨をダイアログ表示

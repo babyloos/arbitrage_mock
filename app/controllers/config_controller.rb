@@ -7,6 +7,7 @@ class ConfigController < ApplicationController
     
     # 資産リセット
     def reset
+        # 資産情報をリセット
         Asset.reset_asset(post_params)
         redirect_to :controller => :trade, :action => :home
     end
