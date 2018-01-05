@@ -206,11 +206,8 @@
             var msec = new Date.parse(init_asset.created_at);
             var init_date = new Date(msec)
             $(".total_profit .jpy .profit").text(profit);
-            // $(".total_profit .btc .profit").text();
             $(".total_profit .jpy .init").text(parseFloat(init_asset.coincheck_jpy) + parseFloat(init_asset.zaif_jpy));
             $(".total_profit .jpy .date").text(init_asset.created_at);
-            // $(".total_profit .btc .init").text(parseFloat(init_asset.coincheck_btc) + parseFloat(init_asset.zaif_btc));
-            
         })
         // 検索失敗時には、その旨をダイアログ表示
         .fail(function() {
