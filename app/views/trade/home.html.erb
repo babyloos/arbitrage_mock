@@ -203,8 +203,8 @@
             
             // 利益総額
             var profit = (parseFloat(asset.coincheck_jpy) + parseFloat(asset.zaif_jpy)) - (parseFloat(init_asset.coincheck_jpy) + parseFloat(init_asset.zaif_jpy))
-            var msec = new Date.parse(init_asset.created_at);
-            var init_date = new Date(msec)
+            // var msec = new Date.parse(init_asset.created_at);
+            // var init_date = new Date(msec)
             $(".total_profit .jpy .profit").text(profit);
             $(".total_profit .jpy .init").text(parseFloat(init_asset.coincheck_jpy) + parseFloat(init_asset.zaif_jpy));
             $(".total_profit .jpy .date").text(init_asset.created_at);
