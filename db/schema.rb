@@ -39,15 +39,6 @@ ActiveRecord::Schema.define(version: 20171226085246) do
     t.datetime "updated_at",           null: false
   end
 
-  create_table "price_diffs", force: :cascade do |t|
-    t.float    "profit"
-    t.float    "amount"
-    t.string   "order"
-    t.float    "per1btcProfit"
-    t.datetime "created_at",    null: false
-    t.datetime "updated_at",    null: false
-  end
-
   create_table "profits", force: :cascade do |t|
     t.float    "profit"
     t.float    "amount"
