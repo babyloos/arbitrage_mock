@@ -100,6 +100,9 @@ class TradeController < ApplicationController
         # 総資産
         total_asset = coincheck_asset + zaif_asset
         
+        # 資産リセットからの総利益
+        init_asset = Asset.reset_info
+        
         @data = [
             "asset": asset,
             "value": value,

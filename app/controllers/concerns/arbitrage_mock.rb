@@ -137,7 +137,7 @@ module ArbitrageMock
     				amount: amount.to_f.round(5),
     				profit: profit.to_f.round(5)
     		    }
-    		    writeLog(data)
+    		  #  writeLog(data)
     		    p data
     		    
     		    # DBに各情報を保存
