@@ -113,6 +113,6 @@ class TradeController < ApplicationController
             "trade_info": tradeInfo,
             "init_asset": init_asset,
         ]
-        render :json => @data
+        render :json => @data.as_json
     end
 end
