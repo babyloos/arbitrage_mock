@@ -83,12 +83,6 @@ module ArbitrageMock
     		        trade: false
     		    }
     		    
-    		    puts "---------------------------"
-    		    p tradeInfo
-    		    p "calcNeedProfitAtOneTrade : " + calcNeedProfitAtOneTrade.to_s
-    		    p "calcTotalFee : " + calcTotalFee.to_s
-    		    puts "---------------------------"
-    		    
     		    tradeRet = trade
     		    # 資産調整を確認
     		    checkAvailableAdjustAsset
@@ -107,14 +101,6 @@ module ArbitrageMock
     				amount = 0
     				profit = 0
     		    end
-    	
-    		    # 0になった資産が出てきたら異常なのでとめる
-    		  #  if @asset[:coincheck_jpy] <= 0 || @asset[:coincheck_btc] <= 0 || @asset[:zaif_jpy] <= 0 || @asset[:zaif_btc] <= 0
-    		  #      puts "異常が発生しました。　０になった資産が出ました。"
-    		  #      printf("総JPY資産 : %f, coincheckJPY : %f, zaifJPY : %f\n", (@asset[:coincheck_jpy] + @asset[:zaif_jpy]), @asset[:coincheck_jpy], @asset[:zaif_jpy])
-    		  #      printf("総BTC資産 : %f, coincheckBTC : %f, zaifBTC : %f\n", (@asset[:coincheck_btc] + @asset[:zaif_btc]), @asset[:coincheck_btc], @asset[:zaif_btc])
-    		  #      exit()
-    		  #  end
     	
     		    # JPYに損益が出たら異常なのでとめる
     		    if @initSumJpyAmount > (@asset[:coincheck_jpy] + @asset[:zaif_jpy])
@@ -324,8 +310,9 @@ module ArbitrageMock
         # 何回取引出来るかを計算する
         def calcTradeCount
         	buy_coincheck = @asset[:coincheck_jpy] / (@minTradeAmount * @value[:coincheck]["ask"])
-        	buy_zaif = @asset[:zaif_jpy] / (@minTradeAmount * @value[:zaif]["ask"])
-        	[buy_coincheck, buy_zaif].min
+        # 	buy_zaif = @asset[:zaif_jpy] / (@minTradeAmount * @value[:zaif]["ask"])
+        # 	[buy_coincheck, buy_zaif].min
+            buy_coincheck
         end
     
         # 1BTCあたりの裁定利益計算
