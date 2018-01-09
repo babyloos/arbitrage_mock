@@ -103,12 +103,12 @@ module ArbitrageMock
     		    end
     	
     		    # 0になった資産が出てきたら異常なのでとめる
-    		    if @asset[:coincheck_jpy] <= 0 || @asset[:coincheck_btc] <= 0 || @asset[:zaif_jpy] <= 0 || @asset[:zaif_btc] <= 0
-    		        puts "異常が発生しました。　０になった資産が出ました。"
-    		        printf("総JPY資産 : %f, coincheckJPY : %f, zaifJPY : %f\n", (@asset[:coincheck_jpy] + @asset[:zaif_jpy]), @asset[:coincheck_jpy], @asset[:zaif_jpy])
-    		        printf("総BTC資産 : %f, coincheckBTC : %f, zaifBTC : %f\n", (@asset[:coincheck_btc] + @asset[:zaif_btc]), @asset[:coincheck_btc], @asset[:zaif_btc])
-    		        exit()
-    		    end
+    		  #  if @asset[:coincheck_jpy] <= 0 || @asset[:coincheck_btc] <= 0 || @asset[:zaif_jpy] <= 0 || @asset[:zaif_btc] <= 0
+    		  #      puts "異常が発生しました。　０になった資産が出ました。"
+    		  #      printf("総JPY資産 : %f, coincheckJPY : %f, zaifJPY : %f\n", (@asset[:coincheck_jpy] + @asset[:zaif_jpy]), @asset[:coincheck_jpy], @asset[:zaif_jpy])
+    		  #      printf("総BTC資産 : %f, coincheckBTC : %f, zaifBTC : %f\n", (@asset[:coincheck_btc] + @asset[:zaif_btc]), @asset[:coincheck_btc], @asset[:zaif_btc])
+    		  #      exit()
+    		  #  end
     	
     		    # JPYに損益が出たら異常なのでとめる
     		    if @initSumJpyAmount > (@asset[:coincheck_jpy] + @asset[:zaif_jpy])
